@@ -1022,7 +1022,7 @@ implementation
 {$R *.lfm}
 
 uses
-  WinAPI, Math,
+  WinAPI, Math, uGuiSpacing,
   frmImportFavorites, frmShutdownCounter, frmSelectDirectory,
   frmWebsiteSettings, WebsiteModules, uUpdateThread, FMDVars, RegExpr, sqlite3dyn, Clipbrd,
   ssl_openssl3_lib, LazFileUtils, LazUTF8, webp, DBUpdater, pcre2, pcre2lib, dynlibs,
@@ -1222,6 +1222,7 @@ procedure TMainForm.FormCreate(Sender: TObject);
 begin
   Randomize;
   FormMain := Self;
+  ApplyUniformSpacing(Self);
   winBuildNumber := 0;
   {$ifdef windows}
   PrevWndProc := windows.WNDPROC(windows.GetWindowLongPtr(Self.Handle, GWL_WNDPROC));

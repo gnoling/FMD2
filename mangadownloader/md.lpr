@@ -14,6 +14,7 @@ uses
   Forms, LazFileUtils, jsonini, simpleipc, sqlite3dyn, uBaseUnit, FMDVars, webp,
   CheckUpdate, DBUpdater, SelfUpdater, uDownloadsManager, LuaWebsiteModules,
   LuaBase, SimpleException, Classes, sysutils, Math, frmMain, frmCheckModules,
+  uGuiSpacing,
   {$ifdef windows}uDarkStyle,{$endif} uMetaDarkStyle, uDarkStyleSchemes, uDarkStyleParams, MultiLog,
   FileChannel, ssl_openssl3_lib, blcksock, ssl_openssl3, SQLiteData;
 
@@ -278,6 +279,7 @@ begin
   uMetaDarkStyle.ApplyMetaDarkStyle(DefaultDark);
   {$endif}
   Application.Initialize;
+  InstallGlobalSpacing;
   Application.CreateForm(TMainForm, MainForm);
   {$ifdef windows}
   MainForm.winBuildNumber := g_buildNumber;
