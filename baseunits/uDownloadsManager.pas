@@ -69,9 +69,7 @@ type
     GetWorkIdGuardian: TRTLCriticalSection;
     FCheckAndActiveTaskFlag: Boolean;
     FCurrentWorkingDir: String;
-    {$IFDEF Windows}
     FCurrentMaxFileNameLength: Integer;
-    {$ENDIF}
     FCurrentCustomFileName: String;
     FIsForDelete: Boolean;
     currentMaxThread: Integer;

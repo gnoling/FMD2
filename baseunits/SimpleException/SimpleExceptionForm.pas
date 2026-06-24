@@ -62,7 +62,7 @@ type
 
 implementation
 
-uses SimpleException;
+uses SimpleException, Math;
 
 {$R *.lfm}
 

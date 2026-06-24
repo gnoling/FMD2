@@ -24,7 +24,10 @@ uses
   AnimatedGif, uBaseUnit, uDownloadsManager, uFavoritesManager,
   uSilentThread, uMisc, uGetMangaInfosThread, frmDropTarget, frmAccountManager,
   frmAccountSet, frmWebsiteOptionCustom, frmCustomColor, frmLogger, frmTransferFavorites,
-  frmLuaModulesUpdater, CheckUpdate, DBDataProcess, uDarkStyleParams, uWin32WidgetSetDark,
+  frmLuaModulesUpdater, CheckUpdate, DBDataProcess, uDarkStyleParams,
+  {$ifdef windows}
+  uWin32WidgetSetDark,
+  {$endif}
   SimpleTranslator, httpsendthread, DateUtils, SimpleException, uCustomControls,
   uCustomControlsMultiLog, ImageMagickManager, frmCheckModules;
 
@@ -1019,9 +1022,7 @@ implementation
 {$R *.lfm}
 
 uses
-  {$ifdef windows}
-  WinAPI,
-  {$endif}
+  WinAPI, Math,
   frmImportFavorites, frmShutdownCounter, frmSelectDirectory,
   frmWebsiteSettings, WebsiteModules, uUpdateThread, FMDVars, RegExpr, sqlite3dyn, Clipbrd,
   ssl_openssl3_lib, LazFileUtils, LazUTF8, webp, DBUpdater, pcre2, pcre2lib, dynlibs,
@@ -1242,8 +1243,10 @@ begin
 
   if IsDarkModeEnabled then
   begin
+    {$ifdef windows}
     TryEnforceDarkStyleForCtrl(rmAbout);
     TryEnforceDarkStyleForCtrl(rmInformation);
+    {$endif}
   end;
 
   // load about

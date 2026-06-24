@@ -5,7 +5,7 @@ unit VirtualPropertyGridEditLink;
 interface
 
 uses
-  Classes, Windows, SysUtils, Messages, typinfo, VirtualPropertyGrid, VirtualTrees,
+  Classes, LCLIntf, SysUtils, typinfo, VirtualPropertyGrid, VirtualTrees,
   Controls, StdCtrls, LMessages, LCLType, Spin, EditBtn, Forms, StringsPropEditDlg;
 
 type
@@ -112,7 +112,7 @@ begin
     end;
     VK_UP, VK_DOWN:
     begin
-      PostMessage(FTree.Handle, WM_KEYDOWN, Key, 0);
+      PostMessage(FTree.Handle, LM_KEYDOWN, Key, 0);
       Key := 0;
     end;
   end;

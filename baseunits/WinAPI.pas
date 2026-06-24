@@ -4,6 +4,7 @@ unit WinAPI;
 
 interface
 
+{$ifdef windows}
 uses
   SysUtils, windows, dynlibs;
 
@@ -77,5 +78,45 @@ initialization
 
 finalization
   doFinal;
+
+{$else}
+// Non-Windows: these power-management / shutdown-block APIs have no portable
+// equivalent here, so provide no-op stubs that keep the interface identical.
+uses
+  SysUtils;
+
+type
+  EXECUTION_STATE = LongWord;
+  LPCWSTR = PWideChar;
+
+const
+  ES_SYSTEM_REQUIRED = EXECUTION_STATE($00000001);
+  ES_DISPLAY_REQUIRED = EXECUTION_STATE($00000002);
+  ES_USER_PRESENT = EXECUTION_STATE($00000004);
+  ES_CONTINUOUS = EXECUTION_STATE($80000000);
+  ES_AWAYMODE_REQUIRED = EXECUTION_STATE($00000040);
+
+function SetThreadExecutionState(esFlags: EXECUTION_STATE): EXECUTION_STATE;
+function ShutdownBlockReasonCreate(Handle: THandle; Msg: LPCWSTR): Boolean;
+function ShutdownBlockReasonDestroy(Handle: THandle): Boolean;
+
+implementation
+
+function SetThreadExecutionState(esFlags: EXECUTION_STATE): EXECUTION_STATE;
+begin
+  Result := 0;
+end;
+
+function ShutdownBlockReasonCreate(Handle: THandle; Msg: LPCWSTR): Boolean;
+begin
+  Result := False;
+end;
+
+function ShutdownBlockReasonDestroy(Handle: THandle): Boolean;
+begin
+  Result := False;
+end;
+
+{$endif}
 
 end.

@@ -115,7 +115,7 @@ type
     procedure EndUpdate; inline;
     procedure AppendSQL(const SQL:string); inline;
     procedure AppendSQLSafe(const SQL:string); inline;
-    procedure FlushSQL(const UseQueue:Boolean=True); inline;
+    procedure FlushSQL(const UseQueue:Boolean=True);
     procedure FlushSQLSafe; inline;
     procedure Commit(const UseQueue:Boolean=True);
   end;

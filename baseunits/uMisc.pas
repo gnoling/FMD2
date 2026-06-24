@@ -8,7 +8,7 @@ uses
   {$ifdef windows}
   ShellApi, Windows,
   {$else}
-  UTF8Process,
+  UTF8Process, Process, MultiLog,
   {$endif}
   Classes, SysUtils, strutils;
 
@@ -456,11 +456,10 @@ begin
   except
     on E: Exception do
     begin
-      WriteLog_E('RunExternalProcess.Error '#13#10 +
+      Logger.SendError('RunExternalProcess.Error '#13#10 +
         'Executable: ' + Exe + #13#10 +
         'Parameters: ' + StringsToCommandLine(Params) + #13#10 +
-        'Message   : ' + E.Message + #13#10 +
-        GetStackTraceInfo);
+        'Message   : ' + E.Message);
     end;
   end;
   Process.Free;

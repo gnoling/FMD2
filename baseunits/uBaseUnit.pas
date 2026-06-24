@@ -18,7 +18,7 @@ uses
   {$else}
   UTF8Process,
   {$endif}
-  SysUtils, Classes, Graphics, LazFileUtils, LConvEncoding,
+  SysUtils, Classes, Graphics, LazFileUtils, LConvEncoding, Math,
   strutils, dateutils, variants, base64, fpjson, jsonparser, jsonscanner,
   fgl, RegExpr, synautil, httpsend,
   synacode, MultiLog, FPimage, GZIPUtils, uMisc, httpsendthread, FMDOptions,

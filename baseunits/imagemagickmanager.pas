@@ -5,7 +5,10 @@ unit ImageMagickManager;
 interface
 
 uses
-  Classes, SysUtils, synautil, StrUtils, StdCtrls, Process, Windows, Registry,
+  Classes, SysUtils, synautil, StrUtils, StdCtrls, Process,
+  {$ifdef windows}
+  Windows, Registry,
+  {$endif}
   LazFileUtils, SyncObjs, MultiLog;
 
 type
@@ -250,6 +253,58 @@ begin
   end;
 end;
 
+{$ifndef windows}
+function TImageMagickManager.FindMagickBinary: Boolean;
+var
+  Proc: TProcess;
+  Paths: array of String;
+  Path: String;
+begin
+  Result := False;
+  FMagickPath := '';
+  FLastError := '';
+
+  // 1. Check common installation paths
+  Paths := [
+    '/usr/bin/',
+    '/usr/local/bin/',
+    '/bin/',
+    IncludeTrailingPathDelimiter(GetCurrentDir)
+  ];
+
+  for Path in Paths do
+  begin
+    if FileExists(Path + 'magick') then
+    begin
+      FMagickPath := Path;
+      Exit(True);
+    end;
+  end;
+
+  // 2. Check PATH by trying to run "magick -version"
+  Proc := TProcess.Create(nil);
+  try
+    try
+      Proc.Executable := 'magick';
+      Proc.Parameters.Add('-version');
+      Proc.Options := [poWaitOnExit, poUsePipes];
+      Proc.ShowWindow := swoHIDE;
+      Proc.Execute;
+      if Proc.ExitStatus = 0 then
+      begin
+        FMagickPath := ''; // Empty means use system PATH
+        Exit(True);
+      end;
+    except
+      on E: Exception do ; // magick not found in PATH
+    end;
+  finally
+    Proc.Free;
+  end;
+
+  FLastError := 'Could not locate ImageMagick installation.';
+end;
+{$else}
 function TImageMagickManager.FindMagickBinary: Boolean;
 var
   Reg: TRegistry;
@@ -331,6 +386,7 @@ begin
 
   FLastError := 'Could not locate ImageMagick installation.';
 end;
+{$endif}
 
 function TImageMagickManager.IdentifyCommand(const QueryCommand: String): TStringList;
 var

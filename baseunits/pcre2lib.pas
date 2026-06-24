@@ -33,7 +33,11 @@ type
   PCRE2_SPTR8 = ^PCRE2_UCHAR8;
 
   PPCRE2_SIZE = ^PCRE2_SIZE;
+  {$ifdef windows}
   PCRE2_SIZE = SIZE_T;
+  {$else}
+  PCRE2_SIZE = csize_t;
+  {$endif}
 
   PCRE2_OPTIONS = cuint32;
 
@@ -59,7 +63,7 @@ type
 
 
 const
-  PCRE2LibName {$IFDEF MSWINDOWS} = 'libpcre2-8.dll'{$ENDIF}{$IFDEF UNIX} = 'libpcre2.so'{$ENDIF};
+  PCRE2LibName {$IFDEF MSWINDOWS} = 'libpcre2-8.dll'{$ENDIF}{$IFDEF UNIX} = 'libpcre2-8.so'{$ENDIF};
 
   { options }
   PCRE2_UTF             = $00080000;

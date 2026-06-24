@@ -5,14 +5,19 @@ unit frmDropTarget;
 interface
 
 uses
-  Classes, Windows, SysUtils, ActiveX, comobj, Forms, Controls, uDarkStyleParams,
+  {$ifdef windows}
+  Windows, ActiveX, comobj,
+  {$else}
+  FakeActiveX,
+  {$endif}
+  Classes, SysUtils, Forms, Controls, uDarkStyleParams,
   ExtCtrls, Menus, LCLType, DefaultTranslator, uBaseUnit, XQueryEngineHTML;
 
 type
 
   { TFormDropTarget }
 
-  TFormDropTarget = class(TForm, IDropTarget)
+  TFormDropTarget = class(TForm{$ifdef windows}, IDropTarget{$endif})
     ImResize: TImage;
     ImDropIcon: TImage;
     MenuItem1: TMenuItem;
@@ -41,6 +46,7 @@ type
     md: Boolean;
     x0, y0: Integer;
     FCanDrop: Boolean;
+    {$ifdef windows}
     // IDropTarget
     function CursorEffect(const AllowedEffects: Cardinal;
       const KeyState: Integer): Cardinal;
@@ -52,6 +58,7 @@ type
     function DragLeave: HResult; stdcall;
     function Drop(const dataObj: IDataObject; {%H-}grfKeyState: DWORD;
       {%H-}pt: TPoint; var {%H-}dwEffect: DWORD): HResult; stdcall;
+    {$endif}
   protected
     procedure CreateParams(var Params: TCreateParams); override;
   public
@@ -74,10 +81,11 @@ implementation
 uses
   frmMain;
 
+{$R *.lfm}
+
+{$ifdef windows}
 var
   CF_HTML: TCLIPFORMAT;
-
-{$R *.lfm}
 
 function MakeFormatEtc(const Fmt: TCLIPFORMAT): TFormatEtc;
 begin
@@ -139,6 +147,7 @@ begin
     Result := '';
   end;
 end;
+{$endif}
 
 function GetURLsFromHTML(const S: String): String;
 var
@@ -160,6 +169,7 @@ begin
   end;
 end;
 
+{$ifdef windows}
 function ParseDataObj(const DataObj: IDataObject;
   const Fmt: TClipboardFormat): String;
 begin
@@ -247,17 +257,28 @@ begin
     Result := url;
   end;
 end;
+{$else}
+// Non-Windows: shell OLE drag-and-drop is not available. The drop-target
+// window still exists (and can be moved/resized), but extracting URLs from a
+// dropped OLE data object is a Windows-only mechanism, so this is a no-op.
+function GetDropURLs(const DataObject: IDataObject): string;
+begin
+  Result := '';
+end;
+{$endif}
 
 { TFormDropTarget }
 
 procedure TFormDropTarget.FormCreate(Sender: TObject);
 begin
+  {$ifdef windows}
   ShowWindow(Self.Handle, SW_HIDE);
   SetWindowLong(Self.Handle, GWL_EXSTYLE, getWindowLong(Self.Handle,
     GWL_EXSTYLE) or WS_EX_TOOLWINDOW);
   ShowWindow(Self.Handle, SW_SHOW);
   OleInitialize(nil);
   OleCheck(RegisterDragDrop(Handle, Self));
+  {$endif}
   AlphaBlend := True;
 end;
 
@@ -275,8 +296,10 @@ end;
 
 procedure TFormDropTarget.FormDestroy(Sender: TObject);
 begin
+  {$ifdef windows}
   RevokeDragDrop(Handle);
   OleUninitialize;
+  {$endif}
   FormDropTarget := nil;
 end;
 
@@ -366,6 +389,7 @@ begin
   miAddToFavorites.Checked := not miDownloadAll.Checked;
 end;
 
+{$ifdef windows}
 function TFormDropTarget.CursorEffect(const AllowedEffects: Cardinal;
   const KeyState: Integer): Cardinal;
 begin
@@ -435,15 +459,20 @@ begin
 
   Result := S_OK;
 end;
+{$endif}
 
 procedure TFormDropTarget.CreateParams(var Params: TCreateParams);
 begin
   inherited CreateParams(Params);
+  {$ifdef windows}
   Params.ExStyle := Params.ExStyle and WS_EX_TOOLWINDOW and (not WS_EX_APPWINDOW);
   Params.WndParent := GetDesktopWindow;
+  {$endif}
 end;
 
+{$ifdef windows}
 initialization
   CF_HTML := RegisterClipboardFormat('HTML Format');
+{$endif}
 
 end.

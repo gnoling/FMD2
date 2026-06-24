@@ -13,7 +13,11 @@ type MarshaledAString = PAnsiChar;
 
 const
   {$IFDEF FPC}
+  {$IFDEF WINDOWS}
   LIB_DUKTAPE = 'libduktape.dll';
+  {$ELSE}
+  LIB_DUKTAPE = 'libduktape_fmd.so';
+  {$ENDIF}
   PREFIX = '';
   {$ELSE}
   {$IF Defined(WIN32)}

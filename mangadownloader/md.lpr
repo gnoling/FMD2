@@ -14,7 +14,7 @@ uses
   Forms, LazFileUtils, jsonini, simpleipc, sqlite3dyn, uBaseUnit, FMDVars, webp,
   CheckUpdate, DBUpdater, SelfUpdater, uDownloadsManager, LuaWebsiteModules,
   LuaBase, SimpleException, Classes, sysutils, frmMain, frmCheckModules,
-  uDarkStyle, uMetaDarkStyle, uDarkStyleSchemes, uDarkStyleParams, MultiLog,
+  {$ifdef windows}uDarkStyle,{$endif} uMetaDarkStyle, uDarkStyleSchemes, uDarkStyleParams, MultiLog,
   FileChannel, ssl_openssl3_lib, blcksock, ssl_openssl3, SQLiteData;
 
 var
@@ -267,10 +267,14 @@ begin
   end;
 
   Application.Scaled := True;
+  {$ifdef windows}
   uMetaDarkStyle.ApplyMetaDarkStyle(DefaultDark);
+  {$endif}
   Application.Initialize;
   Application.CreateForm(TMainForm, MainForm);
+  {$ifdef windows}
   MainForm.winBuildNumber := g_buildNumber;
+  {$endif}
   Application.CreateForm(TFormCheckModules, FormCheckModules);
   Application.Run;
 end.
