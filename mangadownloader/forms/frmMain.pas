@@ -5390,6 +5390,10 @@ end;
 
 function TMainForm.CheckLongNamePaths(APath: String): String;
 begin
+  {$IFDEF WINDOWS}
+  // The \\?\ long-path prefix is a Windows-only construct. On other platforms
+  // it is meaningless and gets mangled by path normalization into an invalid
+  // path (e.g. /?/...), so leave the path untouched.
   if cbOptionEnableLongNamePaths.Checked then
   begin
     if Pos('\\?\', APath) = 0 then
@@ -5397,6 +5401,7 @@ begin
       APath := '\\?\' + APath;
     end;
   end;
+  {$ENDIF}
 
   Result := APath;
 end;
