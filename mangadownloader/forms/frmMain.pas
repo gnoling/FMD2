@@ -1223,6 +1223,16 @@ begin
   Randomize;
   FormMain := Self;
   ApplyUniformSpacing(Self);
+  {$IFNDEF WINDOWS}
+  // The dark-mode flag is only ever set by the Windows-only dark style unit, but
+  // on Linux/macOS the app still renders dark when the system widget theme is
+  // dark. Derive it from the actual window-background luminance so the custom
+  // list colors pick their readable dark-mode variants instead of light pastels.
+  IsDarkModeEnabled :=
+    (ColorToRGB(clWindow) and $FF) * 299 +
+    ((ColorToRGB(clWindow) shr 8) and $FF) * 587 +
+    ((ColorToRGB(clWindow) shr 16) and $FF) * 114 < 128 * 1000;
+  {$ENDIF}
   winBuildNumber := 0;
   {$ifdef windows}
   PrevWndProc := windows.WNDPROC(windows.GetWindowLongPtr(Self.Handle, GWL_WNDPROC));
