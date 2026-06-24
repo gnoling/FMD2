@@ -6223,8 +6223,10 @@ begin
 
     // imagemagick
     TImageMagickManager.Instance.Enabled := ckImageMagick.Checked;
-    TImageMagickManager.Instance.SaveAs := cbImageMagickSaveAs.Items.ValueFromIndex[cbImageMagickSaveAs.ItemIndex];
-    TImageMagickManager.Instance.Compression := cbImageMagickCompression.Items.ValueFromIndex[cbImageMagickCompression.ItemIndex];
+    if cbImageMagickSaveAs.ItemIndex > -1 then
+      TImageMagickManager.Instance.SaveAs := cbImageMagickSaveAs.Items.ValueFromIndex[cbImageMagickSaveAs.ItemIndex];
+    if cbImageMagickCompression.ItemIndex > -1 then
+      TImageMagickManager.Instance.Compression := cbImageMagickCompression.Items.ValueFromIndex[cbImageMagickCompression.ItemIndex];
     TImageMagickManager.Instance.Quality := seImageMagickQuality.Value;
 
     // update
