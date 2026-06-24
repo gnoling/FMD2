@@ -184,8 +184,10 @@ begin
           if cont and used then
             Synchronize(@SyncReopenUsed);
         end;
-
-        dataProcess.Open(FModule.ID);
+        // NB: do not touch the shared UI 'dataProcess' from this worker thread.
+        // The viewed website is refreshed on the main thread via SyncReopenUsed
+        // (-> OpenDataDB -> TOpenDBThread); a direct dataProcess.Open here races
+        // with the main thread's paint reads and deadlocks the updater.
       end
       else
         FFailedList.Add(Format(RS_FailedDownload, [FModule.Name + ' Manga List', HTTP.ResultCode,
