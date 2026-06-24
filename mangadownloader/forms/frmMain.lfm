@@ -985,6 +985,8 @@ object MainForm: TMainForm
                       Top = 0
                       Width = 477
                       Align = alClient
+                      BorderSpacing.Left = 3
+                      BorderSpacing.Around = 3
                       Color = clWindow
                       HideSelection = False
                       ReadOnly = True
