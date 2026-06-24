@@ -168,7 +168,7 @@ begin
               CurrentDirectory := FMD_DIRECTORY;
               Parameters.Add('x');                                     // extract
               Parameters.Add(currentfilename);                         // input
-              Parameters.Add('-o' + AnsiQuotedStr(DATA_FOLDER, '"'));  // destination
+              Parameters.Add('-o' + DATA_FOLDER);                     // destination (TProcess quotes args itself; manual quotes would be passed literally on non-Windows)
               Parameters.Add('-aoa');                                  // overwrite all
               Options := Options + [poWaitOnExit];
               ShowWindow := swoHIDE;
