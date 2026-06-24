@@ -3,17 +3,17 @@ program md;
 {$mode objfpc}{$H+}
 
 uses
-  FMDOptions,
  {$IFDEF UNIX} {$IFDEF UseCThreads}
   cthreads,
  {$ENDIF} {$ENDIF}
+  FMDOptions,
  {$ifdef windows}
   windows,
  {$endif}
   Interfaces, // this includes the LCL widgetset
   Forms, LazFileUtils, jsonini, simpleipc, sqlite3dyn, uBaseUnit, FMDVars, webp,
   CheckUpdate, DBUpdater, SelfUpdater, uDownloadsManager, LuaWebsiteModules,
-  LuaBase, SimpleException, Classes, sysutils, frmMain, frmCheckModules,
+  LuaBase, SimpleException, Classes, sysutils, Math, frmMain, frmCheckModules,
   {$ifdef windows}uDarkStyle,{$endif} uMetaDarkStyle, uDarkStyleSchemes, uDarkStyleParams, MultiLog,
   FileChannel, ssl_openssl3_lib, blcksock, ssl_openssl3, SQLiteData;
 
@@ -55,6 +55,13 @@ begin
     --dump-loaded-modules: dump loaded modules ("ID Name") to log
     --dorestart-pid=9999: windows only, handle used to restart app
   }
+
+  {$IFDEF UNIX}
+  // On Unix the FPU/SSE exception flags are unmasked by default (Windows masks
+  // them), so GTK/widget math raises EDivByZero/EInvalidOp. Mask them like Windows.
+  SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow,
+    exUnderflow, exPrecision]);
+  {$ENDIF}
 
   {$ifdef windows}
   //wait for prev process from dorestart
