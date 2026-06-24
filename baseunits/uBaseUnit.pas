@@ -528,6 +528,7 @@ function URLDecode(const s: String): String;
 function HTMLDecode(const AStr: String): String;
 
 function RemoveSymbols(const input: String): String;
+function CorrectPathComponent(const AName: String): String;
 function CorrectPathSys(const Path: String): String;
 function RemovePathDelim(const Path: string): string;
 
@@ -1475,26 +1476,72 @@ begin
   end;
 end;
 
-function CorrectPathSys(const Path: String): String;
-{$IFDEF WINDOWS}
+// Bound a single path/file name component to the filesystem limit (255). Folder
+// and file names are derived from manga/chapter titles, which can be longer than
+// any filesystem allows for one component (NTFS: 255 UTF-16 units, ext4/NFS: 255
+// bytes). Since a UTF-8 byte count is always >= the UTF-16 unit count, clamping
+// to 255 bytes is safe on every platform. We truncate on a UTF-8 character
+// boundary, reserve room for an appended extension (.cbz/.jpeg/...), and append a
+// short hash of the original name so two long titles that share a prefix do not
+// collapse into the same folder.
+function CorrectPathComponent(const AName: String): String;
+const
+  MAX_NAME_BYTES = 255;
+  EXT_RESERVE = 8;
+  BREAK_LOOKBACK = 48; // how far back to search for a clean word break
 var
-  s: UnicodeString;
-{$ENDIF}
+  h: Cardinal;
+  i, j, budget: Integer;
+  suffix: String;
+begin
+  Result := AName;
+  if Length(Result) <= MAX_NAME_BYTES - EXT_RESERVE then Exit;
+
+  // FNV-1a 32-bit hash of the full original name
+  {$push}{$Q-}{$R-}
+  h := 2166136261;
+  for i := 1 to Length(AName) do
+    h := (h xor Ord(AName[i])) * 16777619;
+  {$pop}
+  suffix := '~' + LowerCase(IntToHex(h, 8));
+
+  budget := MAX_NAME_BYTES - EXT_RESERVE - Length(suffix);
+
+  // hard cut on a UTF-8 character boundary so we never split a multibyte char
+  i := budget;
+  if i >= Length(AName) then
+    i := Length(AName)
+  else
+    while (i > 0) and ((Ord(AName[i + 1]) and $C0) = $80) do
+      Dec(i);
+
+  // prefer a clean break: back up to the last space within a small window so
+  // we don't cut mid-word or leave a dangling opener before the hash
+  j := i;
+  while (j > 0) and (j > i - BREAK_LOOKBACK) and (AName[j] <> ' ') do
+    Dec(j);
+  if (j > 0) and (AName[j] = ' ') then
+    i := j;
+
+  Result := Copy(AName, 1, i);
+  // drop trailing spaces and dangling openers/separators
+  while (Length(Result) > 0) and
+        (Result[Length(Result)] in [' ', #9, '[', '(', '{', '-', '|', ',']) do
+    SetLength(Result, Length(Result) - 1);
+
+  Result := Result + suffix;
+end;
+
+function CorrectPathSys(const Path: String): String;
 begin
   Result := FixWhiteSpace(Path);
   {$IFDEF WINDOWS}
   Result := RemovePathDelim(ExpandFileNameUTF8(TrimFilename(GetForcedPathDelims(Result)), FMD_DIRECTORY));
   Result := TrimRightChar(Result, ['.']);
-  s := UTF8Decode(Result);
-  if Length(s) > MAX_PATHDIR then
-  begin
-    s := MainForm.CheckLongNamePaths(s);
-    if not MainForm.cbOptionEnableLongNamePaths.Checked then
-    begin
-      SetLength(s, MAX_PATHDIR);
-    end;
-    Result := UTF8Encode(s);
-  end;
+  // Over-long total paths are handled by the \\?\ extended-length prefix when the
+  // user enables it; per-component length is bounded separately by
+  // CorrectPathComponent at name-generation time.
+  Result := MainForm.CheckLongNamePaths(Result);
   {$ELSE}
   Result := ExpandFileNameUTF8(TrimFilename(Path), FMD_DIRECTORY);
   {$ENDIF}
@@ -1858,6 +1905,9 @@ begin
 
   // remove pathdelim
   Result := TrimChar(Result, AllowDirectorySeparators);
+
+  // keep each generated name within the filesystem's per-component limit
+  Result := CorrectPathComponent(Result);
 end;
 
 function GetString(const Source, sStart, sEnd: String): String;
