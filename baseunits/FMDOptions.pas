@@ -30,7 +30,11 @@ const
   DBDATA_SERVER_EXT = '.7z';
   UPDATER_EXE = 'updater.exe';
   OLD_UPDATER_EXE = 'old_' + UPDATER_EXE;
+  {$IFDEF WINDOWS}
   ZIP_EXE = '7za.exe';
+  {$ELSE}
+  ZIP_EXE = '7za';
+  {$ENDIF}
   RUN_EXE = '.run';
 
   {$IFDEF WINDOWS}
@@ -269,7 +273,20 @@ begin
   DEFAULT_LOG_FILE := FMD_EXENAME + '.log';
   CURRENT_UPDATER_EXE := FMD_DIRECTORY + UPDATER_EXE;
   OLD_CURRENT_UPDATER_EXE := FMD_DIRECTORY + OLD_UPDATER_EXE;
+  {$IFDEF WINDOWS}
   CURRENT_ZIP_EXE := FMD_DIRECTORY + ZIP_EXE;
+  {$ELSE}
+  // On Unix, 7za is a system tool: prefer a bundled copy next to the binary,
+  // otherwise resolve it from PATH.
+  if FileExists(FMD_DIRECTORY + ZIP_EXE) then
+    CURRENT_ZIP_EXE := FMD_DIRECTORY + ZIP_EXE
+  else
+  begin
+    CURRENT_ZIP_EXE := FindDefaultExecutablePath(ZIP_EXE);
+    if CURRENT_ZIP_EXE = '' then
+      CURRENT_ZIP_EXE := ZIP_EXE;
+  end;
+  {$ENDIF}
 
   BACKUP_FOLDER := FMD_DIRECTORY + 'backup' + PathDelim;
 
