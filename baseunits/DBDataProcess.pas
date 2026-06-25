@@ -296,25 +296,37 @@ end;
 
 procedure TDBDataProcess.ResetRecNo(Dataset: TDataSet);
 begin
-  FRecNo := 0;
+  // Position unknown after open/insert/delete/edit/refresh; force an absolute
+  // seek on the next access rather than trusting a stale step direction.
+  FRecNo := -1;
 end;
 
 function TDBDataProcess.GoToRecNo(const ARecIndex: Integer): Boolean;
 begin
-  if FQuery.RecNo = ARecIndex + 1 then
+  // FRecNo tracks the cursor position ourselves so we never touch the
+  // TBufDataset.RecNo getter, which walks the record list from the head (O(n)).
+  if FRecNo = ARecIndex then
   begin
     Exit(True);
   end;
 
   Result := False;
-  if ARecIndex > RecordCount then
+  if (ARecIndex < 0) or (ARecIndex > RecordCount) then
   begin
     Exit;
   end;
 
   try
+    // Sequential scrolling is by far the common case. Stepping with Next/Prior
+    // is O(1); assigning RecNo re-walks the list from the start (O(n)), which
+    // turns a downward scroll over a large list into O(n^2) (the "jerky crawl").
+    if (FRecNo >= 0) and (FRecNo = ARecIndex - 1) then
+      FQuery.Next
+    else if (FRecNo >= 0) and (FRecNo = ARecIndex + 1) then
+      FQuery.Prior
+    else
+      FQuery.RecNo := ARecIndex + 1;
     FRecNo := ARecIndex;
-    FQuery.RecNo := ARecIndex + 1;
     Result := True;
   except
   end;
@@ -565,8 +577,8 @@ begin
   if FAllSitesAttached then
   begin
     try
-      FQuery.RecNo := RecIndex + 1;
-      Result := FQuery.Fields[DBTempFieldWebsiteIndex].AsString;
+      if GoToRecNo(RecIndex) then
+        Result := FQuery.Fields[DBTempFieldWebsiteIndex].AsString;
     except
       on E: Exception do
         SendLogException(Self.ClassName + '[' + Website + '].GetWebsiteName Error!' +
@@ -1601,8 +1613,10 @@ var
 begin
   if FAllSitesAttached then
   begin
-    FQuery.RecNo := RecIndex + 1;
-    i := FQuery.Fields[DBTempFieldWebsiteIndex].AsInteger;
+    if GoToRecNo(RecIndex) then
+      i := FQuery.Fields[DBTempFieldWebsiteIndex].AsInteger
+    else
+      i := -1;
 
     if i = -1 then
     begin
