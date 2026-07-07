@@ -288,8 +288,6 @@ begin
   end;
   {$ENDIF}
 
-  BACKUP_FOLDER := FMD_DIRECTORY + 'backup' + PathDelim;
-
   ReadConfigFile;
 end;
 
@@ -301,6 +299,7 @@ begin
 
   DATA_FOLDER := APPDATA_DIRECTORY + 'data' + PathDelim;
   USERDATA_FOLDER := APPDATA_DIRECTORY + 'userdata' + PathDelim;
+  BACKUP_FOLDER := APPDATA_DIRECTORY + 'backup' + PathDelim;
 
   SETTINGS_FILE := USERDATA_FOLDER + 'settings.json';
   ACCOUNTS_FILE := USERDATA_FOLDER + 'accounts.db';
@@ -322,6 +321,7 @@ end;
 procedure doInitialization;
 var
   i: Integer;
+  dataDir: String;
 begin
   AppParams:=TStringList.Create;
   AppParams.Sorted:=False;
@@ -330,7 +330,18 @@ begin
   GetProgramVersion(FMD_VERSION_NUMBER);
   FMD_VERSION_STRING := ProgramversionToStr(FMD_VERSION_NUMBER);
   SetFMDdirectory(ExtractFilePath(Application.ExeName));
-  SetAppDataDirectory(FMD_DIRECTORY);
+  // Writable state (userdata/, data/, backup/) defaults to the program
+  // directory (portable layout). If FMD_DATA_DIR is set, it is used instead so
+  // the program directory can stay read-only - needed for a system-wide install
+  // or an AppImage, whose mount point is read-only.
+  dataDir := GetEnvironmentVariable('FMD_DATA_DIR');
+  if dataDir <> '' then
+  begin
+    SetAppDataDirectory(dataDir);
+    ForceDirectories(USERDATA_FOLDER);
+  end
+  else
+    SetAppDataDirectory(FMD_DIRECTORY);
 end;
 
 procedure doFinalization;
