@@ -428,6 +428,15 @@ end;
 procedure TFavoriteTask.SyncStartChecking;
 begin
   with MainForm do begin
+    // Don't leave keyboard focus on a control we're about to disable: LCL raises
+    // EInvalidOperation ("Cannot focus a disabled or invisible window") the next
+    // time it tries to focus it - notably when the new-chapter dialog closes and
+    // restores focus to whatever was active before the check. Park it on the tree.
+    if (ActiveControl = rbFavoritesShowAll) or
+       (ActiveControl = rbFavoritesShowDisabled) or
+       (ActiveControl = rbFavoritesShowEnabled) then
+      if vtFavorites.CanFocus then
+        vtFavorites.SetFocus;
     btCancelFavoritesCheck.Visible := True;
     btFavoritesCheckNewChapter.Width :=
       btFavoritesCheckNewChapter.Width - btCancelFavoritesCheck.Width - 6;
