@@ -31,7 +31,7 @@ procedure InstallGlobalSpacing(const Amount: Integer = DEFAULT_GUI_SPACING);
 implementation
 
 uses
-  ExtCtrls, ComCtrls, Forms;
+  ExtCtrls, ComCtrls, Forms, GroupedEdit;
 
 type
   TGuiSpacer = class
@@ -49,12 +49,43 @@ begin
               (Right = 0) and (Bottom = 0);
 end;
 
+// Spacing for one edge. Controls anchored to a SIBLING's matching edge (or
+// center) are alignment chains - e.g. a column of checkboxes each anchored
+// AnchorSideLeft to the one above. Spacing on that edge shifts every link by
+// Amount relative to its anchor and the offsets accumulate down the chain
+// (that's how the Options checkboxes ended up randomly indented), so those
+// edges get no spacing. Opposite-edge anchors (flow layouts) and parent-edge
+// anchors (margins) keep it.
+function EdgeAmount(const C: TControl; const AKind: TAnchorKind;
+  const Amount: Integer): Integer;
+var
+  side: TAnchorSide;
+begin
+  Result := Amount;
+  side := C.AnchorSide[AKind];
+  if (side.Control = nil) or (side.Control = C.Parent) then
+    Exit;
+  case AKind of
+    // asrTop aliases asrLeft, asrBottom aliases asrRight
+    akLeft, akTop:
+      if side.Side in [asrTop, asrCenter] then
+        Result := 0;
+    akRight, akBottom:
+      if side.Side in [asrBottom, asrCenter] then
+        Result := 0;
+  end;
+end;
+
 procedure ApplyUniformSpacing(AParent: TWinControl; const Amount: Integer);
 var
   i: Integer;
   c: TControl;
 begin
   if AParent = nil then Exit;
+  // Composite edits (TEditButton & co) lay out their embedded edit/button
+  // themselves; margins on those internals squeeze the text and detach the
+  // button.
+  if AParent is TCustomAbstractGroupedEdit then Exit;
   for i := 0 to AParent.ControlCount - 1 do
   begin
     c := AParent.Controls[i];
@@ -65,7 +96,12 @@ begin
       Continue;
 
     if HasNoSpacing(c) then
-      c.BorderSpacing.Around := Amount;
+    begin
+      c.BorderSpacing.Left   := EdgeAmount(c, akLeft, Amount);
+      c.BorderSpacing.Top    := EdgeAmount(c, akTop, Amount);
+      c.BorderSpacing.Right  := EdgeAmount(c, akRight, Amount);
+      c.BorderSpacing.Bottom := EdgeAmount(c, akBottom, Amount);
+    end;
 
     if c is TWinControl then
       ApplyUniformSpacing(TWinControl(c), Amount);
