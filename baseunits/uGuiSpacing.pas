@@ -76,16 +76,33 @@ begin
   end;
 end;
 
+// True when every child of AParent is Align=alClient - i.e. AParent is a thin
+// wrapper (or overlay stack) whose content is meant to fill it exactly. The
+// wrapper itself already carries the outer spacing; spacing its filler again
+// stacks up an inset per nesting level (the manga cover sat 3 levels deep and
+// drifted away from the info text box that has a single designed margin).
+function IsFillerOnlyParent(const AParent: TWinControl): Boolean;
+var
+  i: Integer;
+begin
+  Result := AParent.ControlCount > 0;
+  for i := 0 to AParent.ControlCount - 1 do
+    if AParent.Controls[i].Align <> alClient then
+      Exit(False);
+end;
+
 procedure ApplyUniformSpacing(AParent: TWinControl; const Amount: Integer);
 var
   i: Integer;
   c: TControl;
+  fillersOnly: Boolean;
 begin
   if AParent = nil then Exit;
   // Composite edits (TEditButton & co) lay out their embedded edit/button
   // themselves; margins on those internals squeeze the text and detach the
   // button.
   if AParent is TCustomAbstractGroupedEdit then Exit;
+  fillersOnly := IsFillerOnlyParent(AParent);
   for i := 0 to AParent.ControlCount - 1 do
   begin
     c := AParent.Controls[i];
@@ -95,7 +112,7 @@ begin
     if (c is TSplitter) or (c is TToolButton) or (c.Parent is TToolBar) then
       Continue;
 
-    if HasNoSpacing(c) then
+    if HasNoSpacing(c) and not (fillersOnly and (c.Align = alClient)) then
     begin
       c.BorderSpacing.Left   := EdgeAmount(c, akLeft, Amount);
       c.BorderSpacing.Top    := EdgeAmount(c, akTop, Amount);

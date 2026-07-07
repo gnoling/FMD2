@@ -1182,6 +1182,8 @@ object MainForm: TMainForm
                     AnchorSideLeft.Control = clbChapterList
                     AnchorSideLeft.Side = asrBottom
                     AnchorSideTop.Control = clbChapterList
+                    AnchorSideRight.Control = pnChapterList
+                    AnchorSideRight.Side = asrBottom
                     Left = 606
                     Height = 26
                     Top = 0
@@ -1231,6 +1233,8 @@ object MainForm: TMainForm
                     AnchorSideTop.Side = asrBottom
                     AnchorSideRight.Control = btChecks
                     AnchorSideRight.Side = asrBottom
+                    AnchorSideBottom.Control = pnChapterList
+                    AnchorSideBottom.Side = asrBottom
                     Left = 502
                     Height = 26
                     Top = 250
@@ -3067,6 +3071,7 @@ object MainForm: TMainForm
               Top = 405
               Width = 650
               Anchors = [akTop, akLeft, akRight]
+              AutoSize = True
               BorderSpacing.Top = 20
               Caption = 'External program'
               ChildSizing.LeftRightSpacing = 4
