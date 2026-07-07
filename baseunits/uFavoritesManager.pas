@@ -432,11 +432,17 @@ begin
     btFavoritesCheckNewChapter.Width :=
       btFavoritesCheckNewChapter.Width - btCancelFavoritesCheck.Width - 6;
     btFavoritesCheckNewChapter.Caption := RS_Checking;
-    // Do NOT disable the rbFavoritesShow* filter radios during a check. A
-    // disabled control that LCL later tries to focus - returning to the
-    // Favorites tab mid-check, or a modal restoring focus - raises
-    // EInvalidOperation "Cannot focus a disabled or invisible window". Their
-    // OnChange only re-applies the display filter, which is safe mid-check.
+    {$IFDEF WINDOWS}
+    // Grey out the filter radios for the duration of the check. Kept Windows-only:
+    // Win32 moves focus off a disabled control cleanly, but on GTK2 LCL instead
+    // raises EInvalidOperation "Cannot focus a disabled or invisible window" the
+    // next time it focuses one (returning to the Favorites tab mid-check, a modal
+    // restoring focus, ...). Their OnChange only re-applies the display filter, so
+    // leaving them enabled on non-Windows is harmless.
+    rbFavoritesShowAll.Enabled := False;
+    rbFavoritesShowDisabled.Enabled := False;
+    rbFavoritesShowEnabled.Enabled := False;
+    {$ENDIF}
   end;
 end;
 
@@ -448,6 +454,11 @@ begin
     btFavoritesCheckNewChapter.Width := btFavoritesCheckNewChapter.Width +
       btCancelFavoritesCheck.Width + 6;
     btFavoritesCheckNewChapter.Caption := RS_BtnCheckFavorites;
+    {$IFDEF WINDOWS}
+    rbFavoritesShowAll.Enabled := True;
+    rbFavoritesShowDisabled.Enabled := True;
+    rbFavoritesShowEnabled.Enabled := True;
+    {$ENDIF}
     vtFavorites.Repaint;
     if OptionAutoCheckFavInterval and (not tmCheckFavorites.Enabled) then
       tmCheckFavorites.Enabled := True;
