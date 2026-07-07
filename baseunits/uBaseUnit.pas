@@ -2281,11 +2281,30 @@ begin
 end;
 
 function CreateFQDNName(AFileName: String): String;
+const
+  // A path component can be at most NAME_MAX = 255 bytes on Linux (Windows is
+  // likewise 255 per component; its \\?\ prefix only lifts the total-path
+  // limit). The title can be arbitrarily long, so cap that part while always
+  // keeping the timestamp: 255 - len('FQDNList_') - 1 - len(timestamp) -
+  // len('.txt') = 255 - 9 - 1 - 19 - 4 = 222; keep a margin.
+  MAX_TITLE_BYTES = 200;
 var
-  UniqueTimestampName: String;
+  titlePart, timeStamp: String;
+  i: Integer;
 begin
-  UniqueTimestampName := StringReplace(ExtractFileName(AFileName), ExtractFileExt(AFileName), '', [rfReplaceAll])+ '_' + FormatDateTime('yyyy-mm-dd_hh-nn-ss', Now);
-  Result := StringReplace(('FQDNList_' + UniqueTimestampName), ' ', '_', [rfReplaceAll]);
+  titlePart := StringReplace(ExtractFileName(AFileName), ExtractFileExt(AFileName), '', [rfReplaceAll]);
+  timeStamp := FormatDateTime('yyyy-mm-dd_hh-nn-ss', Now);
+  // Truncate the title at a UTF-8 character boundary so the final component
+  // stays within NAME_MAX (a too-long title otherwise raises EFCreateError
+  // "File name too long" when the FQDN list/folder is created).
+  if Length(titlePart) > MAX_TITLE_BYTES then
+  begin
+    i := MAX_TITLE_BYTES;
+    while (i > 0) and ((Ord(titlePart[i + 1]) and $C0) = $80) do
+      Dec(i);
+    SetLength(titlePart, i);
+  end;
+  Result := StringReplace(('FQDNList_' + titlePart + '_' + timeStamp), ' ', '_', [rfReplaceAll]);
 end;
  
 function CreateFQDNFolder(Sender: TObject; ACurrentDir, AFileName: String): String;
