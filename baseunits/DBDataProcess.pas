@@ -19,6 +19,11 @@ type
     Value: String;
   end;
 
+  TRowMapEntry = record
+    RowID: Int64;
+    SiteIndex: Integer; // -1 = main DB (FModule), else index into FAttachedSites
+  end;
+
   { TDBDataProcess }
 
   TDBDataProcess = class(TObject)
@@ -42,14 +47,17 @@ type
     FFilterSQL: String;
     FLinks: TStringList;
     FRecNo: Integer;
-    // Fast random-access path (single-site only): instead of buffering every
-    // row in FQuery (TBufDataset accumulates a blob buffer per memo field per
-    // row -> O(n^2) as you scroll a large list), keep an ordered array of
-    // rowids and fetch only the visible rows on demand via a prepared stmt.
-    FRowMap: array of Int64;
+    // Fast random-access path: instead of buffering every row in FQuery
+    // (TBufDataset accumulates a blob buffer per memo field per row -> O(n^2)
+    // as you scroll a large list), keep an ordered array of (site,rowid)
+    // entries and fetch only the visible rows on demand via prepared stmts.
+    // Covers both the plain single-site view (SiteIndex always -1) and the
+    // all-sites filtered view (one fetch stmt per attached schema).
+    FRowMap: array of TRowMapEntry;
     FRowMapSQL: String;
     FRowMapValid: Boolean;
-    FRowStmt: Psqlite3_stmt;
+    FRowStmts: array of Psqlite3_stmt; // index = SiteIndex+1, prepared lazily
+    FRowStmtCur: Psqlite3_stmt;        // stmt holding the currently cached row
     FRowStmtIndex: Integer;
     FRowStmtHasRow: Boolean;
     function GetLinkCount: Integer;
@@ -315,28 +323,34 @@ begin
 end;
 
 procedure TDBDataProcess.InvalidateRowMap;
+var
+  i: Integer;
 begin
   FRowMapValid := False;
   FRowStmtIndex := -1;
   FRowStmtHasRow := False;
-  if FRowStmt <> nil then
+  FRowStmtCur := nil;
+  for i := 0 to High(FRowStmts) do
   begin
-    sqlite3_finalize(FRowStmt);
-    FRowStmt := nil;
+    if FRowStmts[i] <> nil then
+    begin
+      sqlite3_finalize(FRowStmts[i]);
+      FRowStmts[i] := nil;
+    end;
   end;
+  SetLength(FRowStmts, 0);
 end;
 
 function TDBDataProcess.EnsureRowMap: Boolean;
 var
   st: Psqlite3_stmt;
-  sql, rowsql: String;
-  n, cap: Integer;
+  sql, rowsql, line: String;
+  lines: TStringList;
+  n, cap, i, branches: Integer;
+  allsites, hasorder: Boolean;
 begin
   Result := False;
-  // Only the plain single-site SELECT is handled here. The all-sites view is a
-  // UNION across attached DBs where rowid is not unique, so it keeps using the
-  // existing FQuery navigation.
-  if FAllSitesAttached or (not FQuery.Active) then
+  if not FQuery.Active then
   begin
     Exit;
   end;
@@ -349,23 +363,82 @@ begin
       InvalidateRowMap;
   end;
 
-  sql := Trim(FQuery.SQL.Text);
-  if UpperCase(LeftStr(sql, 8)) <> 'SELECT *' then
+  // Dispatch on the SQL shape, not on FAllSitesAttached: Filter's exception
+  // handler can restore the plain single-site SQL while sites stay attached.
+  // Branch headers of the all-sites UNION built by Filter start with
+  // 'SELECT *,' (adding the "website" pseudo-column); the plain view is a
+  // single 'SELECT * FROM ...'.
+  allsites := False;
+  for i := 0 to FQuery.SQL.Count - 1 do
   begin
-    Exit;
+    if LeftStr(FQuery.SQL[i], 9) = 'SELECT *,' then
+    begin
+      allsites := True;
+      Break;
+    end;
   end;
 
   InvalidateRowMap;
+  rowsql := '';
 
-  // Build the ordered rowid array from the same FROM/WHERE/ORDER BY clause,
-  // selecting only rowid (no blobs -> no buffer blow-up). Same trick as
-  // GetRecordCount uses for COUNT().
-  rowsql := 'SELECT _rowid_ ' + Copy(sql, 9, Length(sql));
-  // With no ORDER BY, "SELECT *" scans the table (rowid order) while
-  // "SELECT _rowid_" may use the link primary-key index (link order). Pin the
-  // rowid query to rowid order so the map matches the displayed row order.
-  if Pos('ORDER BY', UpperCase(sql)) = 0 then
-    rowsql := rowsql + ' ORDER BY _rowid_';
+  if allsites then
+  begin
+    // All-sites view: rowid alone is not unique, so build a (site,rowid) map.
+    // Transform each union branch header
+    //   SELECT *, "<i>" AS "website" FROM <schema-qualified table>
+    // into
+    //   SELECT _rowid_ AS "rid", "title", "<i>" AS "website" FROM ...
+    // keeping every other line (WHERE clauses, Search-inserted AND lines,
+    // UNION ALL, parentheses, ORDER BY "title") verbatim. "title" must stay
+    // projected for the outer ORDER BY to resolve.
+    branches := 0;
+    hasorder := False;
+    lines := TStringList.Create;
+    try
+      lines.Assign(FQuery.SQL);
+      for i := 0 to lines.Count - 1 do
+      begin
+        line := lines[i];
+        if LeftStr(line, 9) = 'SELECT *,' then
+        begin
+          lines[i] := 'SELECT _rowid_ AS "rid", "title",' + Copy(line, 10, Length(line));
+          Inc(branches);
+        end
+        else if Pos('ORDER BY', line) > 0 then
+          hasorder := True;
+      end;
+      // Shape check: one branch per attached site plus the main table, and an
+      // ORDER BY to define the row order. Anything else means Filter's SQL
+      // format changed; fall back to the FQuery path rather than risk a map
+      // that doesn't match the displayed order.
+      if (branches <> FAttachedSites.Count + 1) or (not hasorder) then
+      begin
+        Exit;
+      end;
+      rowsql := lines.Text;
+    finally
+      lines.Free;
+    end;
+  end
+  else
+  begin
+    sql := Trim(FQuery.SQL.Text);
+    if UpperCase(LeftStr(sql, 8)) <> 'SELECT *' then
+    begin
+      Exit;
+    end;
+
+    // Build the ordered rowid array from the same FROM/WHERE/ORDER BY clause,
+    // selecting only rowid (no blobs -> no buffer blow-up). Same trick as
+    // GetRecordCount uses for COUNT().
+    rowsql := 'SELECT _rowid_ ' + Copy(sql, 9, Length(sql));
+    // With no ORDER BY, "SELECT *" scans the table (rowid order) while
+    // "SELECT _rowid_" may use the link primary-key index (link order). Pin the
+    // rowid query to rowid order so the map matches the displayed row order.
+    if Pos('ORDER BY', UpperCase(sql)) = 0 then
+      rowsql := rowsql + ' ORDER BY _rowid_';
+  end;
+
   n := 0;
   if sqlite3_prepare_v2(FConn.Handle, PAnsiChar(rowsql), -1, @st, nil) = SQLITE_OK then
   begin
@@ -379,7 +452,11 @@ begin
           cap := (cap * 2) + 16;
           SetLength(FRowMap, cap);
         end;
-        FRowMap[n] := sqlite3_column_int64(st, 0);
+        FRowMap[n].RowID := sqlite3_column_int64(st, 0);
+        if allsites then
+          FRowMap[n].SiteIndex := sqlite3_column_int(st, 2)
+        else
+          FRowMap[n].SiteIndex := -1;
         Inc(n);
       end;
     finally
@@ -392,37 +469,74 @@ begin
   end;
   SetLength(FRowMap, n);
 
-  // Prepared statement that fetches a single full row by rowid (indexed,
-  // depth-independent). Column order matches SELECT * == DATA_PARAM_* indices.
-  if sqlite3_prepare_v2(FConn.Handle, PAnsiChar(FSQLSelect + ' WHERE _rowid_ = ?'),
-    -1, @FRowStmt, nil) <> SQLITE_OK then
-  begin
-    FRowStmt := nil;
-    SetLength(FRowMap, 0);
-    Exit;
-  end;
+  // Per-site single-row fetch statements (indexed, depth-independent) are
+  // prepared lazily in RowMapFetch; just size the slots here. Column order of
+  // each 'SELECT * FROM <table>' matches DATA_PARAM_* indices.
+  if allsites then
+    SetLength(FRowStmts, FAttachedSites.Count + 1)
+  else
+    SetLength(FRowStmts, 1);
+  for i := 0 to High(FRowStmts) do
+    FRowStmts[i] := nil;
 
   FRowStmtIndex := -1;
   FRowStmtHasRow := False;
+  FRowStmtCur := nil;
   FRowMapSQL := FQuery.SQL.Text;
   FRowMapValid := True;
   Result := True;
 end;
 
 function TDBDataProcess.RowMapFetch(const AIndex: Integer): Boolean;
+var
+  slot: Integer;
+  st: Psqlite3_stmt;
+  fetchsql: String;
 begin
   if (AIndex >= 0) and (AIndex = FRowStmtIndex) then
   begin
     Exit(FRowStmtHasRow);
   end;
   Result := False;
-  if (FRowStmt = nil) or (AIndex < 0) or (AIndex >= Length(FRowMap)) then
+  if (AIndex < 0) or (AIndex >= Length(FRowMap)) then
   begin
     Exit;
   end;
-  sqlite3_reset(FRowStmt);
-  sqlite3_bind_int64(FRowStmt, 1, FRowMap[AIndex]);
-  FRowStmtHasRow := sqlite3_step(FRowStmt) = SQLITE_ROW;
+
+  slot := FRowMap[AIndex].SiteIndex + 1;
+  if (slot < 0) or (slot > High(FRowStmts)) then
+  begin
+    Exit;
+  end;
+
+  // Prepare the per-site fetch statement on first use.
+  if FRowStmts[slot] = nil then
+  begin
+    if slot = 0 then
+      fetchsql := FSQLSelect + ' WHERE _rowid_ = ?'
+    else
+      fetchsql := 'SELECT * FROM "' + FAttachedSites[slot - 1] + '"."' +
+        FTableName + '" WHERE _rowid_ = ?';
+    if sqlite3_prepare_v2(FConn.Handle, PAnsiChar(fetchsql), -1,
+      @FRowStmts[slot], nil) <> SQLITE_OK then
+    begin
+      FRowStmts[slot] := nil;
+      Exit;
+    end;
+  end;
+  st := FRowStmts[slot];
+
+  // Reset the previously fetched statement too, so no stmt is left sitting in
+  // SQLITE_ROW state against an attached schema (which would block DETACH).
+  if (FRowStmtCur <> nil) and (FRowStmtCur <> st) then
+  begin
+    sqlite3_reset(FRowStmtCur);
+  end;
+
+  sqlite3_reset(st);
+  sqlite3_bind_int64(st, 1, FRowMap[AIndex].RowID);
+  FRowStmtHasRow := sqlite3_step(st) = SQLITE_ROW;
+  FRowStmtCur := st;
   FRowStmtIndex := AIndex;
   Result := FRowStmtHasRow;
 end;
@@ -713,6 +827,15 @@ begin
   if FAllSitesAttached then
   begin
     try
+      // Never read the row through FQuery when the map is valid: SQLite's sort
+      // is not stable, so the buffered cursor can order duplicate titles
+      // differently than the map and attribute the wrong site to the row.
+      if EnsureRowMap then
+      begin
+        if (RecIndex >= 0) and (RecIndex < Length(FRowMap)) then
+          Result := IntToStr(FRowMap[RecIndex].SiteIndex);
+      end
+      else
       if GoToRecNo(RecIndex) then
         Result := FQuery.Fields[DBTempFieldWebsiteIndex].AsString;
     except
@@ -744,7 +867,7 @@ begin
   begin
     if RowMapFetch(RecIndex) then
     begin
-      p := PAnsiChar(sqlite3_column_text(FRowStmt, FieldIndex));
+      p := PAnsiChar(sqlite3_column_text(FRowStmtCur, FieldIndex));
       if p <> nil then
         Result := String(p);
     end;
@@ -774,7 +897,7 @@ begin
   if EnsureRowMap then
   begin
     if RowMapFetch(RecIndex) then
-      Result := sqlite3_column_int(FRowStmt, FieldIndex);
+      Result := sqlite3_column_int(FRowStmtCur, FieldIndex);
     Exit;
   end;
 
@@ -809,7 +932,7 @@ procedure TDBDataProcess.AttachAllSites;
   end;
 
 var
-  i, attachedMax: Integer;
+  i, attachedMax, attachedLimit: Integer;
   m: TModuleContainer;
   tempDataProcess: TDBDataProcess;
 begin
@@ -821,18 +944,26 @@ begin
 
   DetachAllSites;
   FConn.ExecuteDirect('END TRANSACTION');
-  attachedMax := 125;
+  // The bundled Windows sqlite3.dll is a custom build with a 125 attach limit;
+  // ask the library for its actual limit (e.g. system SQLite defaults to 10)
+  // so hitting it gives the warning below instead of an ATTACH exception that
+  // aborts the loop mid-way.
+  attachedLimit := 125;
+  if Assigned(sqlite3_limit) then
+  begin
+    i := sqlite3_limit(FConn.Handle, SQLITE_LIMIT_ATTACHED, -1);
+    if i > 0 then
+      attachedLimit := i;
+  end;
+  attachedMax := attachedLimit;
   tempDataProcess := TDBDataProcess.Create;
 
   try
     for i := 0 to SitesList.Count - 1 do
     begin
-      // default max attached database that came with sqlite3.dll was 7
-      // use custom build attached database with max 125
-      // if FAttachedSites.Count=7 then Break;
       if attachedMax = 0 then
-      begin 
-        SendLogWarning(ClassName + '[' + Website + '].AttachAllSites.Warning! Can''t attach all sites, the limit of 125 reached.');
+      begin
+        SendLogWarning(ClassName + '[' + Website + '].AttachAllSites.Warning! Can''t attach all sites, the attached-database limit of ' + IntToStr(attachedLimit) + ' reached.');
         Break;
       end;
 
@@ -872,6 +1003,11 @@ begin
   begin
     FQuery.Close;
   end;
+
+  // Finalize the per-site row-fetch statements first: a statement left in
+  // SQLITE_ROW state against an attached schema makes DETACH fail with
+  // "database is locked".
+  InvalidateRowMap;
 
   FTrans.CommitRetaining;
   FConn.ExecuteDirect('END TRANSACTION');
@@ -958,7 +1094,7 @@ begin
   FFilterSQL := '';
   FAllSitesAttached := False;
   FRowMapValid := False;
-  FRowStmt := nil;
+  FRowStmtCur := nil;
   FRowStmtIndex := -1;
   FRowStmtHasRow := False;
 
@@ -1353,6 +1489,7 @@ end;
 function TDBDataProcess.DeleteData(const RecIndex: Integer): Boolean;
 var
   k: Integer;
+  tbl: String;
 begin
   Result := False;
   try
@@ -1365,7 +1502,12 @@ begin
       // Delete straight from the table by rowid, then drop the entry from the
       // in-memory map so indices stay aligned with the caller's view (the UI
       // removes its rows in the same descending pass) without a mid-loop rebuild.
-      FConn.ExecuteDirect('DELETE FROM "' + FTableName + '" WHERE _rowid_ = ' + IntToStr(FRowMap[RecIndex]));
+      // In the all-sites view the row lives in the attached site's own DB.
+      if FRowMap[RecIndex].SiteIndex = -1 then
+        tbl := '"' + FTableName + '"'
+      else
+        tbl := '"' + FAttachedSites[FRowMap[RecIndex].SiteIndex] + '"."' + FTableName + '"';
+      FConn.ExecuteDirect('DELETE FROM ' + tbl + ' WHERE _rowid_ = ' + IntToStr(FRowMap[RecIndex].RowID));
       for k := RecIndex to High(FRowMap) - 1 do
         FRowMap[k] := FRowMap[k + 1];
       SetLength(FRowMap, Length(FRowMap) - 1);
@@ -1662,6 +1804,11 @@ begin
         AttachAllSites;
         if FAttachedSites.Count > 0 then
         begin
+          // NOTE: EnsureRowMap parses this SQL line-by-line (branch headers
+          // must start with 'SELECT *,' and an ORDER BY line must exist) to
+          // build its (site,rowid) fast path. Changing the shape here only
+          // disables that fast path (it falls back to the buffered FQuery),
+          // but keep them in sync for large-list scroll performance.
           SQL.Add('SELECT * FROM');
           SQL.Add('(');
           SQL.Add('SELECT *, "-1" AS "website" FROM "' + FTableName + '"');
@@ -1806,18 +1953,27 @@ var
 begin
   if FAllSitesAttached then
   begin
+    // See GetWebsiteName: read the site from the map, not the FQuery cursor.
+    if EnsureRowMap then
+    begin
+      if (RecIndex >= 0) and (RecIndex < Length(FRowMap)) then
+        i := FRowMap[RecIndex].SiteIndex
+      else
+        i := -1;
+    end
+    else
     if GoToRecNo(RecIndex) then
       i := FQuery.Fields[DBTempFieldWebsiteIndex].AsInteger
     else
       i := -1;
 
-    if i = -1 then
+    if (i >= 0) and (i < FAttachedSites.Count) then
     begin
-      Result := FModule;
+      Result := Pointer(FAttachedSites.Objects[i]);
     end
     else
     begin
-      Result := Pointer(FAttachedSites.Objects[i]);
+      Result := FModule;
     end;
   end
   else
