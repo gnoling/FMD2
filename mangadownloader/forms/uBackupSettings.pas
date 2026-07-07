@@ -57,9 +57,15 @@ begin
   if not DirectoryExists(BACKUP_FOLDER) then
     ForceDirectories(BACKUP_FOLDER);
   with TProcess.Create(nil) do try
-    Executable:=ZIP_EXE;
+    Executable:=CURRENT_ZIP_EXE;
     CurrentDirectory:=FMD_DIRECTORY;
+    {$IFDEF WINDOWS}
+    // Detach the child console so no window flashes. On Unix TProcess
+    // implements poNewConsole by wrapping the command in a terminal emulator
+    // (e.g. "xfce4-terminal -e"), which mangles the arguments and the backup
+    // never runs.
     Options:=Options+[poNewConsole];
+    {$ENDIF}
     ShowWindow:=swoHIDE;
     Parameters.Add('a');
     Parameters.Add(AFileName);
