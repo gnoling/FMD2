@@ -1,0 +1,28 @@
+diff --git a/internettools.lpk b/internettools.lpk
+index e4fde22..8fa9a69 100644
+--- a/internettools.lpk
++++ b/internettools.lpk
+@@ -8,7 +8,7 @@
+       <Version Value="11"/>
+       <SearchPaths>
+         <IncludeFiles Value="data;../lazarus/dialogs;import/synapse"/>
+-        <OtherUnitFiles Value="data;internet;import/regexpr/source;../lazarus/dialogs;import/synapse;system;../../../components/pascal/import/flre/src;import/flre/src;import/pasdblstrutils/src"/>
++        <OtherUnitFiles Value="data;internet;import/regexpr/source;../lazarus/dialogs;import/synapse;system;../../../components/pascal/import/flre/src;import/flre/src;import/pasdblstrutils/src;../../baseunits/synapse"/>
+         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+       </SearchPaths>
+     </CompilerOptions>
+@@ -185,10 +185,13 @@
+     <i18n>
+       <EnableI18N Value="True"/>
+     </i18n>
+-    <RequiredPkgs Count="1">
++    <RequiredPkgs Count="2">
+       <Item1>
+         <PackageName Value="FCL"/>
+       </Item1>
++      <Item2>
++        <PackageName Value="laz_synapse"/>
++      </Item2>
+     </RequiredPkgs>
+     <UsageOptions>
+       <UnitPath Value="$(PkgOutDir)"/>

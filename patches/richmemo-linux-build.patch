@@ -1,0 +1,14 @@
+diff --git a/richmemopackage.pas b/richmemopackage.pas
+index 7fd9ba7..44bcf97 100644
+--- a/richmemopackage.pas
++++ b/richmemopackage.pas
+@@ -8,7 +8,8 @@ unit richmemopackage;
+ interface
+ 
+ uses
+-  RichMemoFactory, RichMemoRTF, RichMemoUtils, RichMemoHelpers, RTFParsPre211;
++  RichMemoFactory, RichMemoRTF, RichMemoUtils, RichMemoHelpers, RTFParsPre211, 
++  qt6richmemo;
+ 
+ implementation
+ 

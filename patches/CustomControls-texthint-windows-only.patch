@@ -1,0 +1,69 @@
+diff --git a/Core/uCustomControls.pas b/Core/uCustomControls.pas
+index 46b30e9..fcf8185 100644
+--- a/Core/uCustomControls.pas
++++ b/Core/uCustomControls.pas
+@@ -30,11 +30,17 @@ type
+   TCustomEdit = class(TEdit)
+   private
+     FTextHintColor: TColor;
++    // The hand-drawn TextHint below works around Windows' native hint ignoring
++    // dark-mode colors. On other widgetsets the LCL already emulates the hint
++    // (theme-aware), and painting it again leaves a corner artifact - so the
++    // whole custom paint path is Windows-only.
++    {$IFDEF WINDOWS}
+     procedure WMPaint(var Msg: TWMPaint); message WM_PAINT;
+     procedure CMTextChanged(var Msg: TMessage); message CM_TEXTCHANGED;
+     procedure WMEraseBkgnd(var Msg: TWMEraseBkgnd); message WM_ERASEBKGND;
+   protected
+     procedure CreateWnd; override;
++    {$ENDIF}
+   public
+     constructor Create(AOwner: TComponent); override;
+     property TextHintColor: TColor read FTextHintColor write FTextHintColor default clGrayText;
+@@ -46,11 +52,14 @@ type
+   TCustomGEEdit = class(TGEEdit)
+   private
+     FTextHintColor: TColor;
++    // Windows-only for the same reason as TCustomEdit above.
++    {$IFDEF WINDOWS}
+     procedure WMPaint(var Msg: TWMPaint); message WM_PAINT;
+     procedure CMTextChanged(var Msg: TMessage); message CM_TEXTCHANGED;
+     procedure WMEraseBkgnd(var Msg: TWMEraseBkgnd); message WM_ERASEBKGND;
+   protected
+     procedure CreateWnd; override;
++    {$ENDIF}
+   public
+     constructor Create(AOwner: TComponent); override;
+     property TextHintColor: TColor read FTextHintColor write FTextHintColor default clGrayText;
+@@ -114,6 +123,7 @@ implementation
+     FTextHintColor := clGrayText;
+   end;
+ 
++  {$IFDEF WINDOWS}
+   procedure TCustomEdit.WMPaint(var Msg: TWMPaint);
+   var
+     ACanvas: TCanvas;
+@@ -153,6 +163,7 @@ implementation
+     inherited;
+     Invalidate; // Force repaint to ensure hint is drawn correctly
+   end;
++  {$ENDIF}
+ 
+   { TCustomGEEdit }
+ 
+@@ -162,6 +173,7 @@ implementation
+     FTextHintColor := clGrayText;
+   end;
+ 
++  {$IFDEF WINDOWS}
+   procedure TCustomGEEdit.WMPaint(var Msg: TWMPaint);
+   var
+     ACanvas: TCanvas;
+@@ -201,6 +213,7 @@ implementation
+     inherited;
+     Invalidate;
+   end;
++  {$ENDIF}
+ 
+   { TCustomEditButton }
+ 
