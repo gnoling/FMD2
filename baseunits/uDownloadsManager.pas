@@ -805,7 +805,12 @@ begin
 end;
 
 procedure TTaskThread.SyncShowBallonHint;
+{$IFNDEF WINDOWS}
+var
+  notifyExe, hintBody: String;
+{$ENDIF}
 begin
+  {$IFDEF WINDOWS}
   with MainForm.TrayIcon, Container.DownloadInfo do
   begin
     if Container.Status = STATUS_FAILED then
@@ -826,6 +831,26 @@ begin
     end;
     ShowBalloonHint;
   end;
+  {$ELSE}
+  // On GTK2 the LCL tray balloon has no native backend and falls back to
+  // TPopupNotifier, which leaves the main window input-grabbed until another
+  // modal clears it. Use the desktop's native notifier instead - fire-and-forget
+  // (isPersistent=False), args passed as an array so titles need no escaping.
+  notifyExe := FindDefaultExecutablePath('notify-send');
+  if notifyExe = '' then Exit;
+  with Container.DownloadInfo do
+    if Container.Status = STATUS_FAILED then
+    begin
+      if Status = '' then
+        hintBody := Title + ' - ' + RS_Failed
+      else
+        hintBody := Title + LineEnding + Status;
+      RunExternalProcess(notifyExe, ['-a', 'FMD2', '-u', 'critical', 'FMD2', hintBody], False, False);
+    end
+    else
+    if Container.Status = STATUS_FINISH then
+      RunExternalProcess(notifyExe, ['-a', 'FMD2', 'FMD2', '"' + Title + '" - ' + RS_Finish], False, False);
+  {$ENDIF}
 end;
 
 procedure TTaskThread.TerminateThreads;
