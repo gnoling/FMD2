@@ -1,3 +1,37 @@
+diff --git a/gtk2/gtk2richmemo.pas b/gtk2/gtk2richmemo.pas
+index c4e3222..f260b26 100644
+--- a/gtk2/gtk2richmemo.pas
++++ b/gtk2/gtk2richmemo.pas
+@@ -1125,6 +1125,7 @@ var
+   h      : double;
+   fl     : double;
+   t      : double;
++  piw    : Integer;
+   attr   : PGtkTextAttributes;
+   fp     : TFontParams;
+ const
+@@ -1147,6 +1148,12 @@ begin
+   GetAttributesAt(AWinControl, TextStart, true, attr, fp);
+   gtk_text_attributes_unref(attr);
+ 
++  // Line spacing below the default cannot be expressed by GTK's
++  // pixels-inside-wrap (it must be >= 0); clamp instead of passing a
++  // negative value, which GTK rejects with a GLib-CRITICAL warning.
++  piw := round(fp.Size*(AMetric.LineSpacing-DefLineSpacing)*DPIFactor);
++  if piw < 0 then piw := 0;
++
+   GetWidgetBuffer(AWinControl, w, buffer);
+   tag := gtk_text_buffer_create_tag (buffer, nil,
+       'pixels-above-lines',   [ gint(round(AMetric.SpaceBefore*DPIFactor)),
+@@ -1159,7 +1166,7 @@ begin
+       'right-margin-set',       gboolean(gTRUE),
+       'indent',                 gint(round(fl*DPIFactor)),
+       'indent-set',             gboolean(gTRUE),
+-      'pixels-inside-wrap',     gint((round(fp.Size*(AMetric.LineSpacing-DefLineSpacing)*DPIFactor))),
++      'pixels-inside-wrap',     gint(piw),
+       'pixels-inside_wrap-set', gboolean(gTRUE),
+       nil]);
+   ApplyTag(buffer, tag, TextStart, TextLen, true);
 diff --git a/richmemopackage.pas b/richmemopackage.pas
 index 7fd9ba7..44bcf97 100644
 --- a/richmemopackage.pas
