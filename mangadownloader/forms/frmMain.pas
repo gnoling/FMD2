@@ -2006,8 +2006,13 @@ procedure TMainForm.tmRefreshDownloadsInfoStartTimer(Sender: TObject);
 begin
   if Assigned(DLManager) then
   begin
-    TransferRateGraphInit(round(TransferRateGraph.Width/4)+1);
-    TransferRateGraph.Visible := True;
+    try
+      TransferRateGraphInit(round(TransferRateGraph.Width/4)+1);
+      TransferRateGraph.Visible := True;
+    except
+      on E: Exception do
+        Logger.SendException(Self.ClassName + '.tmRefreshDownloadsInfoStartTimer transfer-rate graph error', E);
+    end;
     {$ifdef windows}
     StandbyCounter := 0;
     {$endif}
@@ -2033,8 +2038,17 @@ begin
     StandbyCounter := 0;
   end;
   {$endif}
-  TransferRateGraphAddItem(DLManager.TransferRate);
+  // Repaint the download list first: this timer is the only thing animating
+  // the progress bars, so a failure in the graph update below must not be
+  // able to skip it (an exception here every tick would freeze the bars
+  // until the next status change).
   vtDownload.Repaint;
+  try
+    TransferRateGraphAddItem(DLManager.TransferRate);
+  except
+    on E: Exception do
+      Logger.SendException(Self.ClassName + '.tmRefreshDownloadsInfoTimer transfer-rate graph error', E);
+  end;
 end;
 
 procedure DumpLoadedModules;
