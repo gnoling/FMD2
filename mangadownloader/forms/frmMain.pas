@@ -5497,8 +5497,9 @@ begin
     Inc(i);
   end;
 
-  // Set the default color for the entire text
-  rmAbout.SetRangeColor(0, -1, textColor);
+  // Set the default color for the entire text (explicit length: the -1 "to
+  // end" shorthand only works with the Windows richedit backend)
+  rmAbout.SetRangeColor(0, rmAbout.GetTextLen, textColor);
 
   // Apply the colors of stored ranges
   for i := 1 to StyleRangesCount do
@@ -5534,18 +5535,27 @@ begin
       Lines.Add('');
     end;
 
-    p := SelStart;
+    // Style the label AFTER inserting it, over its real character range.
+    // (Setting attributes on an empty range at the caret only pre-sets the
+    // "typing format" on the Windows richedit backend; on GTK2 it is a no-op,
+    // which left the whole info text unformatted.) The range is taken from
+    // GetTextLen before/after the add so the line separator's accounting
+    // doesn't shift it - styling the invisible separator is harmless.
+    p := GetTextLen;
+    Lines.Add(ATitle);
     GetTextAttributes(p, fp);
     fp.Color := ColorToRGB(clWindowText);
     fp.Style += [fsBold, fsUnderline];
-    Inc(fp.Size);
-    SetTextAttributes(p, 0, fp);
-    Lines.Add(ATitle);
-    p := SelStart;
-    fp.Style -= [fsBold, fsUnderline];
-    Dec(fp.Size);
-    SetTextAttributes(p, 0, fp);
+    if fp.Size > 0 then
+      Inc(fp.Size);
+    SetTextAttributes(p, GetTextLen - p, fp);
+
+    p := GetTextLen;
     Lines.Add(s);
+    fp.Style -= [fsBold, fsUnderline];
+    if fp.Size > 0 then
+      Dec(fp.Size);
+    SetTextAttributes(p, GetTextLen - p, fp);
   end;
 end;
 

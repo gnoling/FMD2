@@ -38,6 +38,10 @@ cp -rL "$REPO/lua"       "$DEST/lua"
 cp -rL "$REPO/languages" "$DEST/languages"
 cp -rL "$REPO/images"    "$DEST/images"
 
+# about-tab content (loaded from next to the binary at runtime)
+cp "$REPO/readme.rtf"     "$DEST/readme.rtf"
+cp "$REPO/changelog.txt"  "$DEST/changelog.txt"
+
 # default module/website config (created/overwritten in userdata on first run)
 if [[ -f "$REPO/dist/config.json" ]]; then
   cp "$REPO/dist/config.json" "$DEST/config.json"
