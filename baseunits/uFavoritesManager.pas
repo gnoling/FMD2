@@ -745,28 +745,43 @@ begin
 end;
 
 procedure TFavoriteManager.StopChekForNewChapter(WaitFor: Boolean; FavoriteIndex: Integer);
+var
+  stopThread: TThread;
 begin
-  if not isRunning then Exit;
-  if FavoriteIndex > -1 then
-  begin
-    with Items[FavoriteIndex] do begin
-      if Thread <> nil then
-      begin
-        Thread.Terminate;
-        if WaitFor then
-          Thread.WaitFor;
+  stopThread := nil;
+  // TaskThread / Items[].Thread are FreeOnTerminate and are cleared and freed by
+  // the task itself under FGuardian as it finishes (see TFavoriteTask.Execute).
+  // Read and signal them under the same lock, otherwise cancelling exactly as a
+  // check completes calls Terminate on a half-freed thread -> EAccessViolation.
+  EnterCriticalsection(FGuardian);
+  try
+    if not isRunning then Exit;
+    if FavoriteIndex > -1 then
+    begin
+      with Items[FavoriteIndex] do begin
+        if Thread <> nil then
+        begin
+          Thread.Terminate;
+          stopThread := Thread;
+        end;
+        if Status <> STATUS_IDLE then
+          Status := STATUS_IDLE;
       end;
-      if Status <> STATUS_IDLE then
-        Status := STATUS_IDLE;
+    end
+    else
+    if Assigned(TaskThread) then
+    begin
+      TaskThread.Terminate;
+      stopThread := TaskThread;
     end;
-  end
-  else
-  if Assigned(TaskThread) then
-  begin
-    TaskThread.Terminate;
-    if WaitFor then
-      TaskThread.WaitFor;
+  finally
+    LeaveCriticalsection(FGuardian);
   end;
+
+  // WaitFor must be outside the lock: the task takes FGuardian to finish, so
+  // awaiting it while holding the lock would deadlock.
+  if WaitFor and Assigned(stopThread) then
+    stopThread.WaitFor;
 end;
 
 procedure TFavoriteManager.ShowResult;
