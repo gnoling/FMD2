@@ -428,22 +428,15 @@ end;
 procedure TFavoriteTask.SyncStartChecking;
 begin
   with MainForm do begin
-    // Don't leave keyboard focus on a control we're about to disable: LCL raises
-    // EInvalidOperation ("Cannot focus a disabled or invisible window") the next
-    // time it tries to focus it - notably when the new-chapter dialog closes and
-    // restores focus to whatever was active before the check. Park it on the tree.
-    if (ActiveControl = rbFavoritesShowAll) or
-       (ActiveControl = rbFavoritesShowDisabled) or
-       (ActiveControl = rbFavoritesShowEnabled) then
-      if vtFavorites.CanFocus then
-        vtFavorites.SetFocus;
     btCancelFavoritesCheck.Visible := True;
     btFavoritesCheckNewChapter.Width :=
       btFavoritesCheckNewChapter.Width - btCancelFavoritesCheck.Width - 6;
     btFavoritesCheckNewChapter.Caption := RS_Checking;
-    rbFavoritesShowAll.Enabled := False;
-    rbFavoritesShowDisabled.Enabled := False;
-    rbFavoritesShowEnabled.Enabled := False;
+    // Do NOT disable the rbFavoritesShow* filter radios during a check. A
+    // disabled control that LCL later tries to focus - returning to the
+    // Favorites tab mid-check, or a modal restoring focus - raises
+    // EInvalidOperation "Cannot focus a disabled or invisible window". Their
+    // OnChange only re-applies the display filter, which is safe mid-check.
   end;
 end;
 
@@ -455,9 +448,6 @@ begin
     btFavoritesCheckNewChapter.Width := btFavoritesCheckNewChapter.Width +
       btCancelFavoritesCheck.Width + 6;
     btFavoritesCheckNewChapter.Caption := RS_BtnCheckFavorites;
-    rbFavoritesShowAll.Enabled := True;
-    rbFavoritesShowDisabled.Enabled := True;
-    rbFavoritesShowEnabled.Enabled := True;
     vtFavorites.Repaint;
     if OptionAutoCheckFavInterval and (not tmCheckFavorites.Enabled) then
       tmCheckFavorites.Enabled := True;
