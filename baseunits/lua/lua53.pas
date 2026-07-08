@@ -155,7 +155,9 @@ type
    lua_Number   = Double;
    Plua_Number  = ^lua_Number;
 
-   size_t = Cardinal;
+   // C size_t is pointer-width (8 bytes on 64-bit); Cardinal is always 32-bit,
+   // which corrupts the stack when the C library writes an 8-byte length. See lua54.pas.
+   size_t = SizeUInt;
    Psize_t = ^size_t;
 
    Plua_State = Pointer;

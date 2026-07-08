@@ -165,7 +165,11 @@ type
    lua_Number   = Double;
    Plua_Number  = ^lua_Number;
 
-   size_t = Cardinal;
+   // C size_t is pointer-width: 4 bytes on 32-bit, 8 on 64-bit targets.
+   // Declaring it as Cardinal (always 32-bit) makes luaL_checklstring and
+   // friends write 8 bytes into a 4-byte slot on 64-bit builds, corrupting
+   // the stack. SizeUInt tracks the native pointer width and matches the ABI.
+   size_t = SizeUInt;
    Psize_t = ^size_t;
 
    Plua_State = Pointer;
