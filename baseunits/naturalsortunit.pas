@@ -222,6 +222,13 @@ var
   end;
 
 begin
+  // Result must be initialized: when either string is empty the comparison
+  // block below is skipped, and the length fallback at the end reads Result.
+  // Leaving it uninitialized returns stack garbage for any empty-string
+  // compare, producing a non-transitive/non-antisymmetric ordering that makes
+  // TFPSList.QuickSort read out of bounds and crash. (Windows takes the
+  // StrCmpLogicalW path instead, so this only bit the non-Windows build.)
+  Result := 0;
   if (Str1 <> '') and (Str2 <> '') then
   begin
     pStr1 := PChar(Str1);
