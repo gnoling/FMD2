@@ -856,6 +856,8 @@ type
 
     // exception handle
     procedure ExceptionHandler(Sender: TObject; E: Exception);
+
+    function SetFocusedControl(Control: TWinControl): Boolean; override;
     { public declarations }
   end;
 
@@ -1449,6 +1451,26 @@ begin
   Hide;
   CloseNow;
   CloseAction := caFree;
+end;
+
+function TMainForm.SetFocusedControl(Control: TWinControl): Boolean;
+begin
+  // A widgetset can report focus for a control the LCL has since made
+  // unfocusable: GTK2 keeps the toplevel's focus widget pointing into a
+  // notebook page after that page has been switched away, then re-emits
+  // focus-in for it, so a control on a hidden tab sheet gets re-entered.
+  // SetFocusedControl is the one focus entry point that does not check
+  // CanFocus, and it walks CM_ENTER down to the control. A grouped edit
+  // (the search boxes, the custom-date fields) answers CM_ENTER by focusing
+  // its inner editor, which then trips the CanFocus assertion in
+  // SetActiveControl and raises EInvalidOperation.
+  // Refuse the focus change instead; a False result means "focus not taken",
+  // which is what already happens for any control that cannot be focused.
+  if Assigned(Control) and (Control <> Self) and
+     ([csLoading, csDesigning] * ComponentState = []) and
+     not Control.CanFocus then
+    Exit(False);
+  Result := inherited SetFocusedControl(Control);
 end;
 
 procedure TMainForm.CloseNow;
