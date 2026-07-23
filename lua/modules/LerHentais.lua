@@ -4,24 +4,38 @@
 
 function Init()
 	local m = NewWebsiteModule()
-	m.ID                       = 'e39b96c82f8b4b949a729446884a7b37'
-	m.Name                     = 'Ikiru'
-	m.RootURL                  = 'https://06.ikiru.wtf'
-	m.Category                 = 'Indonesian'
+	m.ID                       = '0b3d848de717473fbb71c87a89921ba5'
+	m.Name                     = 'LerHentais'
+	m.RootURL                  = 'https://lerhentais.com'
+	m.Category                 = 'Portuguese'
+	m.OnGetDirectoryPageNumber = 'GetDirectoryPageNumber'
 	m.OnGetNameAndLink         = 'GetNameAndLink'
 	m.OnGetInfo                = 'GetInfo'
 	m.OnGetPageNumber          = 'GetPageNumber'
+	m.OnBeforeDownloadImage    = 'BeforeDownloadImage'
+	m.SortedList               = true
 end
 
 ----------------------------------------------------------------------------------------------------
 -- Local Constants
 ----------------------------------------------------------------------------------------------------
 
-local Template = require 'templates.KiruBase'
+local Template = require 'templates.Hiper'
+__st = 'd2d8289f1ca41385bcc99afebbce2065ccca301d207d20e49abc7aac69594542'
+ChapterName = 'Capítulo '
+Key = 'X-Flux-Node'
+Value = 'G2ZsDdWhUwdU82Vw'
 
 ----------------------------------------------------------------------------------------------------
 -- Event Functions
 ----------------------------------------------------------------------------------------------------
+
+-- Get the page count of the manga list of the current website.
+function GetDirectoryPageNumber()
+	Template.GetDirectoryPageNumber()
+
+	return no_error
+end
 
 -- Get links and names from the manga list of the current website.
 function GetNameAndLink()
@@ -37,9 +51,16 @@ function GetInfo()
 	return no_error
 end
 
--- Get the page count for the current chapter.
+-- Get the page count and/or page links for the current chapter.
 function GetPageNumber()
 	Template.GetPageNumber()
+
+	return true
+end
+
+-- Prepare the URL, http header and/or http cookies before downloading an image.
+function BeforeDownloadImage()
+	Template.BeforeDownloadImage()
 
 	return true
 end

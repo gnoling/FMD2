@@ -4,10 +4,10 @@
 
 function Init()
 	local m = NewWebsiteModule()
-	m.ID                       = 'cc9b87e0e2fe4da5b6e8eb7500c3f8c2'
-	m.Name                     = 'NicoManga'
-	m.RootURL                  = 'https://nicomanga.com'
-	m.Category                 = 'Raw'
+	m.ID                       = 'd36c58efbd4b414b91a220922bab96fb'
+	m.Name                     = 'Omicaso'
+	m.RootURL                  = 'https://omicaso.org'
+	m.Category                 = 'Indonesian'
 	m.OnGetDirectoryPageNumber = 'GetDirectoryPageNumber'
 	m.OnGetNameAndLink         = 'GetNameAndLink'
 	m.OnGetInfo                = 'GetInfo'
@@ -19,7 +19,8 @@ end
 -- Local Constants
 ----------------------------------------------------------------------------------------------------
 
-local DirectoryPagination = '/manga-list.html?pr=new&s=post&st=DESC&p='
+local DirectoryPagination = '/api/manga.php?sort=created&limit=40&page='
+local DirectoryPageLimit = 40
 
 ----------------------------------------------------------------------------------------------------
 -- Event Functions
@@ -31,7 +32,7 @@ function GetDirectoryPageNumber()
 
 	if not HTTP.GET(u) then return net_problem end
 
-	PAGENUMBER = tonumber(CreateTXQuery(HTTP.Document).XPathString('//div[@class="custom-pagination"]/a[last()-2]')) or 1
+	PAGENUMBER = tonumber(math.ceil(CreateTXQuery(require 'fmd.crypto'.HTMLEncode(HTTP.Document.ToString())).XPathString('json(*).total') / DirectoryPageLimit)) or 1
 
 	return no_error
 end
@@ -42,7 +43,10 @@ function GetNameAndLink()
 
 	if not HTTP.GET(u) then return net_problem end
 
-	CreateTXQuery(HTTP.Document).XPathHREFAll('//a[@class="manga-title"]', LINKS, NAMES)
+	for v in CreateTXQuery(require 'fmd.crypto'.HTMLEncode(HTTP.Document.ToString())).XPath('json(*).items()').Get() do
+		LINKS.Add(v.GetProperty('url').ToString())
+		NAMES.Add(v.GetProperty('title').ToString())
+	end
 
 	return no_error
 end
@@ -55,31 +59,29 @@ function GetInfo()
 
 	local x = CreateTXQuery(HTTP.Document)
 	MANGAINFO.Title     = x.XPathString('//h1')
-	MANGAINFO.AltTitles = x.XPathString('//div[./div="Other names"]/div[2]')
-	MANGAINFO.CoverLink = x.XPathString('//img[contains(@class, "manga-cover-image")]/@src')
-	MANGAINFO.Authors   = x.XPathStringAll('//div[./div="Author(s)"]//a')
-	MANGAINFO.Genres    = x.XPathStringAll('//div[./div="Genre(s)"]//a')
-	MANGAINFO.Status    = MangaInfoStatusIfPos(x.XPathString('//div[./div="Status"]//a'), 'On going', 'Completed')
-	MANGAINFO.Summary   = x.XPathString('//div[@class="description-text-content"]')
+	MANGAINFO.AltTitles = x.XPathString('//p[@class="detail-alt-title"]/text()')
+	MANGAINFO.CoverLink = x.XPathString('//div[@class="detail-poster"]/img/@src')
+	MANGAINFO.Authors   = x.XPathString('//div[span="Author"]/strong')
+	MANGAINFO.Artists   = x.XPathString('//div[span="Artist"]/strong')
+	MANGAINFO.Genres    = x.XPathStringAll('(//div[@class="detail-rating-line"]/a, //div[span="Type"]/strong)')
+	MANGAINFO.Status    = MangaInfoStatusIfPos(x.XPathString('//div[span="Status"]/strong'))
+	MANGAINFO.Summary   = x.XPathString('//section[@class="synopsis-box"]/p')
 
-	for v in x.XPath('//div[@id="chapter-grid"]/a').Get() do
-		MANGAINFO.ChapterLinks.Add(v.GetAttribute('href'):gsub('.html', ''))
-		MANGAINFO.ChapterNames.Add(x.XPathString('.//div[@class="chapter-name-grid"]', v))
+	for v in x.XPath('//div[@data-chapter-list]/a').Get() do
+		MANGAINFO.ChapterLinks.Add(v.GetAttribute('href'))
+		MANGAINFO.ChapterNames.Add(x.XPathString('span/strong', v))
 	end
-	MANGAINFO.ChapterLinks.Reverse(); MANGAINFO.ChapterNames.Reverse()
 
 	return no_error
 end
 
 -- Get the page count and/or page links for the current chapter.
 function GetPageNumber()
-	local u = MaybeFillHost(MODULE.RootURL, URL) .. '.html'
+	local u = MaybeFillHost(MODULE.RootURL, URL)
 
 	if not HTTP.GET(u) then return false end
 
-	local x = CreateTXQuery(HTTP.Document)
-	x.ParseHTML(x.XPathString('//script[contains(., "const images")]/substring-before(substring-after(., "const images = "), ";")'):gsub('\\"', '"'):gsub('\\/', '/'))
-	x.XPathStringAll('json(*)()', TASK.PageLinks)
+	CreateTXQuery(HTTP.Document).XPathStringAll('//img[@data-reader-image]/@src', TASK.PageLinks)
 
 	return true
 end
