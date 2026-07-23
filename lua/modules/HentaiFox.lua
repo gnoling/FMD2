@@ -53,6 +53,9 @@ function GetInfo()
 	local pages, x = nil
 	local p = 1
 	local u = MaybeFillHost(MODULE.RootURL, URL:gsub('(.*)pag/.*', '%1'):gsub('(.*)popular/.*', '%1'))
+	-- the pagination url below is built by appending to this one, so it has to
+	-- end with a delimiter even when the supplied url came without one
+	u = u:gsub('/+$', '') .. '/'
 	if u:find(MODULE.RootURL .. '/page/') then return net_problem end
 
 	if not HTTP.GET(u) then return net_problem end
@@ -98,8 +101,11 @@ function GetPageNumber()
 
 -- Extract/Build/Repair image urls before downloading them.
 function GetImageURL()
- 	local u = MaybeFillHost(MODULE.RootURL, URL:gsub('/gallery/', '/g/')) .. (WORKID + 1) .. '/'
- 
+ 	-- strip any trailing delimiter before appending the page number, the chapter
+ 	-- url is not guaranteed to have one (e.g. when it came from a pasted url)
+ 	local u = MaybeFillHost(MODULE.RootURL, URL:gsub('/gallery/', '/g/')):gsub('/+$', '')
+ 	u = u .. '/' .. (WORKID + 1) .. '/'
+
  	if not HTTP.GET(u) then return net_problem end
  
  	TASK.PageLinks[WORKID] = CreateTXQuery(HTTP.Document).XPathString('//img[@id="gimg"]/@data-src')
