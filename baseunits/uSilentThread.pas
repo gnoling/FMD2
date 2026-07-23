@@ -62,6 +62,7 @@ type
     procedure SyncDownloadAll;
     procedure SyncAddToFavorite;
     procedure SyncImportToFavorite;
+    procedure SyncUpdateFavorites;
     procedure Execute; override;
   public
     constructor Create(const AManager: TSilentThreadManager);
@@ -554,6 +555,14 @@ begin
   begin
     DLManager.Sort(DLManager.SortColumn);
   end;
+  // these two repaint the favorites tree and rewrite the filter radio captions,
+  // so they have to run on the main thread like every other UI touch in here
+  if not isExiting then
+    Synchronize(SyncUpdateFavorites);
+end;
+
+procedure TSilentThread.SyncUpdateFavorites;
+begin
   MainForm.UpdateVtFavorites;
   MainForm.vtFavoritesFilterCountChange;
 end;
