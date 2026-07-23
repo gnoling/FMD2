@@ -352,6 +352,7 @@ begin
   if isPersistent then
     WaitForSingleObject(SEInfo.hProcess, INFINITE);
   {$ELSE}
+  Result := False;
   Process := TProcessUTF8.Create(nil);
   try
     Process.Executable := Exe;
@@ -363,6 +364,7 @@ begin
       pr.Free;
     end;
     Process.Execute;
+    Result := True;
   finally
     Process.Free;
   end;
