@@ -835,6 +835,7 @@ type
     procedure OpenWithExternalProgramChapters(const Dir: String;
       const Chapters: TStrings = nil);
     procedure OpenWithExternalProgram(const Dir, Filename: String);
+    function OpenPath(const APath: String): Boolean;
 
     // transfer rate graph
     procedure TransferRateGraphInit(xCount: Integer = 10);
@@ -4196,17 +4197,47 @@ begin
   end;
 end;
 
+// Open a file or folder with its associated application.
+//
+// This is a stand-in for LCL's OpenDocument on non-Windows: that one quotes
+// the path with QuotedStr (which doubles any apostrophe, Pascal-style) and
+// then feeds it through TProcess.CommandLine, whose parser strips the outer
+// quotes but does NOT collapse the doubled ''. A path like ".../Boku's Manga"
+// therefore reaches xdg-open as ".../Boku''s Manga", which does not exist, so
+// the folder never opens. Passing the path as a literal argument sidesteps all
+// of the command-line quoting. Windows keeps LCL's OpenDocument, whose Win32
+// backend hands the raw path to ShellExecuteW and has no such problem.
+function TMainForm.OpenPath(const APath: String): Boolean;
+{$ifndef windows}
+var
+  opener: String;
+{$endif}
+begin
+  {$ifdef windows}
+  Result := OpenDocument(APath);
+  {$else}
+  if not (FileExistsUTF8(APath) or DirectoryExistsUTF8(APath)) then
+    Exit(False);
+  opener := FindDefaultExecutablePath('xdg-open');
+  if opener = '' then
+    opener := FindDefaultExecutablePath('gnome-open');
+  if opener = '' then
+    Exit(False);
+  Result := RunExternalProcess(opener, [APath], False, False);
+  {$endif}
+end;
+
 procedure TMainForm.miFavoritesOpenFolderClick(Sender: TObject);
 begin
   if Assigned(vtFavorites.FocusedNode) then
-    OpenDocument(CorrectPathSys(
+    OpenPath(CorrectPathSys(
       FavoriteManager.Items[vtFavorites.FocusedNode^.Index].FavoriteInfo.SaveTo));
 end;
 
 procedure TMainForm.miDownloadOpenFolderClick(Sender: TObject);
 begin
   if Assigned(vtDownload.FocusedNode) then
-    OpenDocument(CorrectPathSys(
+    OpenPath(CorrectPathSys(
       DLManager.Items[vtDownload.FocusedNode^.Index].DownloadInfo.SaveTo));
 end;
 
@@ -7124,7 +7155,7 @@ begin
   begin
     if (ADir <> '') and (AParam <> '') then
       AParam := ADir + PathDelim + AParam;
-    OpenDocument(AParam);
+    OpenPath(AParam);
   end;
 end;
 
