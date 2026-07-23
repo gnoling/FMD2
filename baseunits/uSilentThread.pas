@@ -15,7 +15,7 @@ unit uSilentThread;
 interface
 
 uses
-  SysUtils, fgl, uBaseUnit, uData, uDownloadsManager,
+  Classes, SysUtils, fgl, uBaseUnit, uData, uDownloadsManager,
   WebsiteModules, FMDOptions, httpsendthread, BaseThread, LazFileUtils, MultiLog;
 
 type
@@ -86,6 +86,7 @@ type
     procedure AddThread(const T: TSilentThread);
     procedure RemoveThread(const T: TSilentThread);
     function GetMetaData(const T: TSilentThread): Boolean;
+    procedure WaitForNoThreads;
   public
     procedure Add(const AType: TMetaDataType; const AModule: TModuleContainer; const ATitle, AURL: String); overload;
     procedure Add(const AType: TMetaDataType; const AModule: TModuleContainer; const ATitle, AURL: String;
@@ -239,8 +240,37 @@ begin
   end;
 
   if WaitFor then
-    while FThreads.Count>0 do
+    WaitForNoThreads;
+end;
+
+// The threads counted here answer Synchronize (UpdateLoadStatus, and the
+// SyncDownloadAll/SyncAddToFavorite/SyncImportToFavorite handlers), and they
+// only leave FThreads from their destructor, at the very end. Waiting on the
+// main thread without servicing the synchronize queue therefore deadlocks:
+// the worker blocks in Synchronize forever, so the count never drops, so we
+// never stop waiting. StopAll runs from CloseNow, which is why closing the app
+// during a silent add could hang it for good.
+procedure TSilentThreadManager.WaitForNoThreads;
+var
+  Deadline: QWord;
+  OnMainThread: Boolean;
+begin
+  OnMainThread := MainThreadID = GetCurrentThreadID;
+  Deadline := GetTickCount64 + QWord(ThreadWaitTimeoutShutdown);
+  while FThreads.Count > 0 do
+  begin
+    if GetTickCount64 >= Deadline then
+    begin
+      Logger.SendWarning(Format(
+        'Gave up after %dms waiting for %d silent thread(s) to finish.',
+        [ThreadWaitTimeoutShutdown, FThreads.Count]));
+      Exit;
+    end;
+    if OnMainThread then
+      CheckSynchronize(HeartBeatRate)
+    else
       Sleep(HeartBeatRate);
+  end;
 end;
 
 procedure TSilentThreadManager.UpdateLoadStatus;

@@ -9,7 +9,7 @@ uses
   ComCtrls, Buttons, uCustomControls, WebsiteModules, LuaMangaInfo,
   LuaMangaCheck, LuaHTTPSend, LuaWebsiteModuleHandler, LuaWebsiteModules, uData,
   LuaUtils, uBaseUnit, uDownloadsManager, LuaDownloadTask, httpsendthread,
-  StrUtils, frmCustomMessageDlg, StatusBarDownload,
+  StrUtils, frmCustomMessageDlg, StatusBarDownload, BaseThread,
   {$ifdef luajit}lua{$else}{$ifdef lua54}lua54{$else}lua53{$endif}{$endif};
 
 type
@@ -694,12 +694,12 @@ begin
   if Assigned(FScanThread) then
   begin
     FScanThread.Terminate;
-    FScanThread.WaitFor;
+    WaitForThread(FScanThread, 'module scan', ThreadWaitTimeoutShutdown);
   end;
   if Assigned(FCheckThread) then
   begin
     FCheckThread.Terminate;
-    FCheckThread.WaitFor;
+    WaitForThread(FCheckThread, 'module check', ThreadWaitTimeoutShutdown);
   end;
 
   ClearModulesList;
@@ -933,12 +933,12 @@ begin
   if Assigned(FScanThread) then
   begin
     FScanThread.Terminate;
-    FScanThread.WaitFor;
+    WaitForThread(FScanThread, 'module scan', ThreadWaitTimeoutInteractive);
   end;
   if Assigned(FCheckThread) then
   begin
     FCheckThread.Terminate;
-    FCheckThread.WaitFor;
+    WaitForThread(FCheckThread, 'module check', ThreadWaitTimeoutInteractive);
   end;
 end;
 

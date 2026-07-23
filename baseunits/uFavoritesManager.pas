@@ -220,7 +220,8 @@ begin
   if Assigned(Thread) then
   begin
     Thread.Terminate;
-    Thread.WaitFor;
+    WaitForThread(Thread, 'favorite check for "' + FavoriteInfo.Title + '"',
+      ThreadWaitTimeoutInteractive);
     Thread := nil;
   end;
   if Assigned(NewMangaInfo) then
@@ -973,7 +974,7 @@ begin
   // WaitFor must be outside the lock: the task takes FGuardian to finish, so
   // awaiting it while holding the lock would deadlock.
   if WaitFor and Assigned(stopThread) then
-    stopThread.WaitFor;
+    WaitForThread(stopThread, 'favorites check task', ThreadWaitTimeoutShutdown);
 end;
 
 procedure TFavoriteManager.ShowResult;

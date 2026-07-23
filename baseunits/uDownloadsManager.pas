@@ -1964,7 +1964,8 @@ begin
     begin
       TaskThread.Terminate;
       if isWaitFor then
-        TaskThread.WaitFor;
+        WaitForThread(TaskThread, 'download task "' + DownloadInfo.Title + '"',
+          ThreadWaitTimeoutInteractive);
     end;
     if isCheckForActive then
       CheckAndActiveTask();
@@ -2021,7 +2022,8 @@ begin
       for i := 0 to Items.Count - 1 do
         with Items[i] do
           if Running then
-            TaskThread.WaitFor;
+            WaitForThread(TaskThread, 'download task "' + DownloadInfo.Title + '"',
+              ThreadWaitTimeoutShutdown);
     finally
       isReadyForExit := False;
     end;

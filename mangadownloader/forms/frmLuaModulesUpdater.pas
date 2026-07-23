@@ -973,7 +973,7 @@ begin
   if ThreadCheck <> nil then
   begin
     ThreadCheck.Terminate;
-    ThreadCheck.WaitFor;
+    WaitForThread(ThreadCheck, 'lua module update check', ThreadWaitTimeoutShutdown);
   end;
   Repos.Free;
   DoneCriticalsection(FListCS);

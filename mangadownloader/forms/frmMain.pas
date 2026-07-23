@@ -21,7 +21,7 @@ uses
   ExtCtrls, ComCtrls, Buttons, Spin, Menus, VirtualTrees, RichMemo, simpleipc, process,
   lclproc, types, LCLIntf, EditBtn, GroupedEdit, PairSplitter, MultiLog,
   FileChannel, FileUtil, LazStringUtils, TAGraph, TASources, TASeries, TATools,
-  AnimatedGif, uBaseUnit, uDownloadsManager, uFavoritesManager,
+  AnimatedGif, BaseThread, uBaseUnit, uDownloadsManager, uFavoritesManager,
   uSilentThread, uMisc, uGetMangaInfosThread, frmDropTarget, frmAccountManager,
   frmAccountSet, frmWebsiteOptionCustom, frmCustomColor, frmLogger, frmTransferFavorites,
   frmLuaModulesUpdater, CheckUpdate, DBDataProcess, uDarkStyleParams,
@@ -1505,13 +1505,14 @@ begin
   if Assigned(DBUpdaterThread) then DBUpdaterThread.Terminate;
   if Assigned(SelfUpdaterThread) then SelfUpdaterThread.Terminate;
 
-  if Assigned(CheckUpdateThread) then CheckUpdateThread.WaitFor;
-  if Assigned(SearchDBThread) then SearchDBThread.WaitFor;
-  if Assigned(OpenDBThread) then OpenDBThread.WaitFor;
-  if Assigned(GetInfosThread) then GetInfosThread.WaitFor;
-  if isUpdating then updateList.WaitFor;
-  if Assigned(DBUpdaterThread) then DBUpdaterThread.WaitFor;
-  if Assigned(SelfUpdaterThread) then SelfUpdaterThread.WaitFor;
+  WaitForThread(CheckUpdateThread, 'version check', ThreadWaitTimeoutShutdown);
+  WaitForThread(SearchDBThread, 'manga list search', ThreadWaitTimeoutShutdown);
+  WaitForThread(OpenDBThread, 'manga list open', ThreadWaitTimeoutShutdown);
+  WaitForThread(GetInfosThread, 'manga info fetch', ThreadWaitTimeoutShutdown);
+  if isUpdating then
+    WaitForThread(updateList, 'manga list update', ThreadWaitTimeoutShutdown);
+  WaitForThread(DBUpdaterThread, 'manga list download', ThreadWaitTimeoutShutdown);
+  WaitForThread(SelfUpdaterThread, 'self update', ThreadWaitTimeoutShutdown);
 
   Timer1Hour.Enabled := False;
   TimerBackup.Enabled := False;
@@ -2311,7 +2312,8 @@ begin
       begin
         if Running then
         begin
-          TaskThread.WaitFor;
+          WaitForThread(TaskThread, 'download task "' + DownloadInfo.Title + '"',
+            ThreadWaitTimeoutInteractive);
         end;
 
         if ((Sender = miDownloadDeleteTaskData) or (Sender = miDownloadDeleteTaskDataFavorite))
@@ -5724,7 +5726,7 @@ begin
   begin
     try
       GetInfosThread.Terminate;
-      GetInfosThread.WaitFor;
+      WaitForThread(GetInfosThread, 'manga info fetch', ThreadWaitTimeoutInteractive);
     except
     end;
   end;
