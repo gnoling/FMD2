@@ -33,7 +33,7 @@ function Init()
 	m.OnAfterImageSaved = 'AfterImageSaved'
 	m.AddOptionCheckBox('mf_removewatermark', lang.removewatermark, true)
 	m.AddOptionCheckBox('mf_saveaspng', lang.saveaspng, false)
-	require('fmd.mangafoxwatermark').LoadTemplate(fmd.LuaDirectory .. 'extras\\mangafoxtemplate')
+	require('fmd.mangafoxwatermark').LoadTemplate(fmd.LuaDirectory .. 'extras/mangafoxtemplate')
 end
 
 function GetDirectoryPageNumber()
@@ -106,7 +106,10 @@ function GetPageNumber()
 			TASK.PageNumber = tonumber(s:match('imagecount%s*=%s*(%d-)%s*;') or '0')
 			if TASK.PageNumber == nil then TASK.PageNumber = 1 end
 			local p = 1
+			local stalled = 0
 			while p <= TASK.PageNumber do
+				if HTTP.Terminated then return false end
+				local before = TASK.PageLinks.Count
 				HTTP.Reset()
 				HTTP.Headers.Values['Pragma'] = 'no-cache'
 				HTTP.Headers.Values['Cache-Control'] = 'no-cache'
@@ -127,6 +130,19 @@ function GetPageNumber()
 					TASK.PageLinks.Delete(TASK.PageLinks.Count-1)
 				end
 				if TASK.PageLinks.Count >= TASK.PageNumber then break end
+				-- a request that yields nothing new would be repeated forever with the
+				-- same page number; give the server a few chances, then fail the chapter
+				-- so the task can retry it later instead of hanging
+				if TASK.PageLinks.Count > before then
+					stalled = 0
+				else
+					stalled = stalled + 1
+					if stalled >= 3 then
+						TASK.PageLinks.Clear()
+						TASK.PageNumber = 0
+						return false
+					end
+				end
 				p = TASK.PageLinks.Count + 1
 				sleep(2000) -- without minimum delay of 2 seconds server will only give 2 images for each xhr request
 			end
