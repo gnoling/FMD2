@@ -31,7 +31,7 @@ var
 implementation
 
 uses
-  uBaseUnit,
+  Math, BaseThread, uBaseUnit,
   LuaPackage, LuaClass, LuaUtils,
   LuaCriticalSection, LuaMemoryStream,
   LuaBaseUnit, LuaSynaUtil,
@@ -63,10 +63,29 @@ begin
     end;
 end;
 
+// Sleep in slices and stop early once the owning thread has been told to
+// stop, so a module's delay loop reacts to Stop within a quarter second
+// instead of finishing the whole delay first. Code running on the main
+// thread (or any non-FMD thread) keeps the plain sleep.
 function luabase_sleep(L: Plua_State): Integer; cdecl;
+var
+  ms, slice: Integer;
+  t: TThread;
 begin
   Result := 0;
-  Sleep(lua_tointeger(L, 1));
+  ms := lua_tointeger(L, 1);
+  t := TThread.CurrentThread;
+  if not (t is TBaseThread) then
+  begin
+    Sleep(ms);
+    Exit;
+  end;
+  while (ms > 0) and (not TBaseThread(t).IsTerminated) do
+  begin
+    slice := Min(ms, 250);
+    Sleep(slice);
+    Dec(ms, slice);
+  end;
 end;
 
 procedure LuaBaseRegisterBasic(const L: Plua_State);
@@ -115,6 +134,24 @@ begin
   end;
 end;
 
+// Count hook, run by the VM every few hundred instructions on whichever
+// thread is executing the state. Once that thread has been told to stop,
+// every HTTP call already returns False at once, so a module's own retry
+// loop just spins and the thread never ends (FanFox's chapterfun loop did
+// exactly that, and the stopped task kept its download slot). Raising from
+// here unwinds the Lua call to the lua_pcall that started it and lets the
+// thread finish. It must be raised from this frame and no other: lua_error
+// is a C longjmp, which would skip the implicit finalization frame of any
+// Pascal function holding a managed local, so this hook keeps none.
+procedure luabase_terminatehook(L: Plua_State; ar: Plua_Debug); cdecl;
+var
+  t: TThread;
+begin
+  t := TThread.CurrentThread;
+  if (t is TBaseThread) and TBaseThread(t).IsTerminated then
+    luaL_error(L, '%s', PAnsiChar('aborted: thread terminated'));
+end;
+
 function LuaNewBaseState: Plua_State;
 begin
   Result := luaL_newstate;
@@ -122,6 +159,7 @@ begin
     luaL_openlibs(Result);
     LuaBaseRegisterAll(Result);
     LuaPackage.RegisterLoader(Result);
+    lua_sethook(Result, @luabase_terminatehook, LUA_MASKCOUNT, 1000);
   except
     on E: Exception do
       SendLogException('LuaNewBaseState()>', E);
