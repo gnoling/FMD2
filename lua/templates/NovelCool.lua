@@ -5,48 +5,62 @@
 local _M = {}
 
 ----------------------------------------------------------------------------------------------------
--- Local Constants
+-- Template Configuration
 ----------------------------------------------------------------------------------------------------
 
-DirectoryPagination = '/category/index_'
-DirectorySuffix     = '.html'
-StatusOngoing       = 'Ongoing'
-StatusCompleted     = 'Completed'
+AlphaList = '#ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+----------------------------------------------------------------------------------------------------
+-- Helper Functions
+----------------------------------------------------------------------------------------------------
+
+-- Set the required http headers for making a request.
+local function SetRequestHeaders()
+	HTTP.Reset()
+	HTTP.Headers.Values['Referer'] = MODULE.RootURL
+end
+
+local function ChapterStableId(title, occurrence)
+	local key = title
+	if occurrence > 1 then
+		key = string.format('%s\x01%d', title, occurrence)
+	end
+	local hash = require 'fmd.crypto'.MD5(key)
+	hash = hash:gsub('.', function(c) return string.format('%02x', c:byte()) end)
+	return hash:lower():sub(-10)
+end
 
 ----------------------------------------------------------------------------------------------------
 -- Event Functions
 ----------------------------------------------------------------------------------------------------
 
--- Get the page count of the manga list of the current website.
-function _M.GetDirectoryPageNumber()
-	local u = MODULE.RootURL .. DirectoryPagination .. 1
-
-	if not HTTP.GET(u) then return net_problem end
-
-	PAGENUMBER = tonumber(CreateTXQuery(HTTP.Document).XPathString('//div[@class="dis-inline-block para-h8"]')) or 1
-
-  return no_error
-end
-
 -- Get links and names from the manga list of the current website.
 function _M.GetNameAndLink()
-	local u = MODULE.RootURL .. DirectoryPagination .. (URL + 1) .. DirectorySuffix
+	local i, s
+	if MODULE.CurrentDirectoryIndex == 0 then
+		s = '0-9'
+	else
+		i = MODULE.CurrentDirectoryIndex + 1
+		s = AlphaList:sub(i, i)
+	end
+	local u = MODULE.RootURL .. '/category/' .. s .. '_' .. (URL + 1) .. '.html?sort=name'
 
 	if not HTTP.GET(u) then return net_problem end
 
-	CreateTXQuery(HTTP.Document).XPathHREFTitleAll('//div[@class="book-info"]/a', LINKS, NAMES)
+	local x = CreateTXQuery(HTTP.Document)
+	x.XPathHREFTitleAll('//div[@class="book-info"]/a', LINKS, NAMES)
+	UPDATELIST.CurrentDirectoryPageNumber = tonumber(x.XPathString('//div[@class="page-nav-center-num hidden-pm"]'):match('/(%d+)')) or 1
 
 	return no_error
 end
 
 -- Get info and chapter list for the current manga.
 function _M.GetInfo()
-	local x = nil
 	local u = MaybeFillHost(MODULE.RootURL, URL)
 
 	if not HTTP.GET(u) then return net_problem end
 
-	x = CreateTXQuery(HTTP.Document)
+	local x = CreateTXQuery(HTTP.Document)
 	MANGAINFO.Title     = x.XPathString('//h1[@class="bookinfo-title"]')
 	MANGAINFO.CoverLink = x.XPathString('//div[@class="bk-intro"]//img[@class="bookinfo-pic-img"]/@src')
 	MANGAINFO.Authors   = x.XPathStringAll('//div[@class="bk-intro"]//div[@class="bookinfo-author"]/a/span')
@@ -54,24 +68,50 @@ function _M.GetInfo()
 	MANGAINFO.Status    = MangaInfoStatusIfPos(x.XPathString('//div[contains(@class, "bk-cate-type1")]/a'), StatusOngoing, StatusCompleted)
 	MANGAINFO.Summary   = x.XPathString('(//div[@class="bk-summary-txt"])[1]')
 
-	x.XPathHREFTitleAll('//div[@class="chp-item"]/a', MANGAINFO.ChapterLinks, MANGAINFO.ChapterNames)
+	local seen = {}
+	for v in x.XPath('//div[@class="chp-item"]/a').Get() do
+		local href = v.GetAttribute('href')
+		local title = v.GetAttribute('title')
+
+		if not href:find('/chapter/', 1, true) then
+			seen[title] = (seen[title] or 0) + 1
+			local id = ChapterStableId(title, seen[title])
+			MODULE.Storage[id] = href
+			href = id
+		end
+
+		MANGAINFO.ChapterLinks.Add(href)
+		MANGAINFO.ChapterNames.Add(title)
+	end
 	MANGAINFO.ChapterLinks.Reverse(); MANGAINFO.ChapterNames.Reverse()
 
 	return no_error
 end
 
--- Get the page count for the current chapter.
+-- Get the page count and/or page links for the current chapter.
 function _M.GetPageNumber()
-	local x = nil
-	local u = MaybeFillHost(MODULE.RootURL, URL)
+	if MODULE.Storage[URL:match('[^/]+$')] ~= '' then
+		local u = MODULE.Storage[URL:match('[^/]+$')]
 
-	if not HTTP.GET(u) then return net_problem end
+		SetRequestHeaders()
+		if not HTTP.GET(u) then return false end
+	
+		u = HTTP.Document.ToString():match('document%.location%s*=%s*["\'](.-)["\']')
 
-	x = CreateTXQuery(HTTP.Document)
-	x.XPathStringAll('(//select[@class="sl-page"])[last()]/option/@value', TASK.PageContainerLinks)
-	TASK.PageNumber = TASK.PageContainerLinks.Count
+		SetRequestHeaders()
+		if not HTTP.GET(u) then return false end
 
-	return no_error
+		CreateTXQuery(HTTP.Document).XPathStringAll('json("[" || //script[contains(., "all_imgs_url")] ! substring-before(substring-after(., "all_imgs_url: ["), "]") || "]")()', TASK.PageLinks)
+	else
+		local u = MaybeFillHost(MODULE.RootURL, URL)
+
+		if not HTTP.GET(u) then return false end
+
+		CreateTXQuery(HTTP.Document).XPathStringAll('(//select[@class="sl-page"])[last()]/option/@value', TASK.PageContainerLinks)
+		TASK.PageNumber = TASK.PageContainerLinks.Count
+	end
+
+	return true
 end
 
 -- Extract/Build/Repair image urls before downloading them.

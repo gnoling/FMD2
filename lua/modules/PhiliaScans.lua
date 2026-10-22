@@ -1,27 +1,10 @@
 ----------------------------------------------------------------------------------------------------
--- Module Initialization
-----------------------------------------------------------------------------------------------------
-
-function Init()
-	local m = NewWebsiteModule()
-	m.ID                       = 'c280ce32f36843fbba73dcc891e979af'
-	m.Name                     = 'Philia Scans'
-	m.RootURL                  = 'https://philiascans.org'
-	m.Category                 = 'English-Scanlation'
-	m.OnGetDirectoryPageNumber = 'GetDirectoryPageNumber'
-	m.OnGetNameAndLink         = 'GetNameAndLink'
-	m.OnGetInfo                = 'GetInfo'
-	m.OnGetPageNumber          = 'GetPageNumber'
-	m.OnDownloadImage          = 'DownloadImage'
-	m.SortedList               = true
-end
-
-----------------------------------------------------------------------------------------------------
 -- Local Constants
 ----------------------------------------------------------------------------------------------------
 
 local DirectoryPagination = '/all-mangas?m_orderby=new-manga&page='
 local crypto = require 'fmd.crypto'
+local json = require 'utils.json'
 
 ----------------------------------------------------------------------------------------------------
 -- Helper Functions
@@ -114,6 +97,50 @@ local function BuildPermutation(chapter_key, page_index, grid_size)
 	return w
 end
 
+-- Get a reader access token.
+local function GetReaderAccessToken(force_refresh)
+	if not force_refresh then
+		local cached_token = MODULE.Storage['ReaderAccessToken']
+		local cached_expires_at = tonumber(MODULE.Storage['ReaderAccessTokenExpiresAt']) or 0
+		if cached_token ~= '' and (cached_expires_at - os.time()) > 60 then
+			return cached_token
+		end
+	end
+
+	HTTP.Reset()
+	HTTP.Headers.Values['X-Requested-With'] = 'XMLHttpRequest'
+	if not HTTP.POST(MODULE.RootURL .. '/api/reader/access-token') then return nil end
+	if HTTP.ResultCode < 200 or HTTP.ResultCode >= 300 then return nil end
+
+	local result = json.decode(HTTP.Document.ToString())
+	if not result.token then return nil end
+
+	MODULE.Storage['ReaderAccessToken'] = result.token
+	MODULE.Storage['ReaderAccessTokenExpiresAt'] = result.expiresAt or 0
+
+	return result.token
+end
+
+-- Get the page keys for the current chapter.
+local function FetchPageKeys(chapter_id, token)
+	HTTP.Reset()
+	HTTP.Headers.Values['X-Reader-Access-Token'] = token
+	if not HTTP.GET(MODULE.RootURL .. '/api/chapters/' .. chapter_id .. '/page-keys') then return nil end
+
+	if HTTP.ResultCode == 404 then
+		token = GetReaderAccessToken(true)
+		if not token then return nil end
+
+		HTTP.Reset()
+		HTTP.Headers.Values['X-Reader-Access-Token'] = token
+		if not HTTP.GET(MODULE.RootURL .. '/api/chapters/' .. chapter_id .. '/page-keys') then return nil end
+	end
+
+	if HTTP.ResultCode < 200 or HTTP.ResultCode >= 300 then return nil end
+
+	return token, json.decode(HTTP.Document.ToString())
+end
+
 ----------------------------------------------------------------------------------------------------
 -- Event Functions
 ----------------------------------------------------------------------------------------------------
@@ -146,11 +173,12 @@ end
 
 -- Get info and chapter list for the current manga.
 function GetInfo()
+	local NextJs = require 'utils.nextjs'
 	local u = MaybeFillHost(MODULE.RootURL, URL)
 
 	if not HTTP.GET(u) then return net_problem end
 
-	local s = HTTP.Document.ToString():gsub('\\"', '"'):gsub('\\\\', '\\'):gsub('"%]%)</script><script>self%.__next_f%.push%(%[1,"', '')
+	local s = HTTP.Document.ToString()
 	local x = CreateTXQuery(s)
 	MANGAINFO.Title     = x.XPathString('//h1')
 	MANGAINFO.CoverLink = x.XPathString('//meta[@property="og:image"]/@content')
@@ -160,24 +188,40 @@ function GetInfo()
 	MANGAINFO.Status    = MangaInfoStatusIfPos(x.XPathString('//div[span="Status"]/span[2]'), 'On Going', 'Completed', 'On Hold', 'Canceled')
 	MANGAINFO.Summary   = x.XPathString('//div[@class="synopsis-text"]/p')
 
-	local slug = URL:match('/([^/]+)$')
-	for v in x.XPath('parse-json(//script[contains(., "langChapters")]/substring-before(substring-after(., "langChapters"":"), ",""hasVolumes"))()[coinPrice=0]').Get() do
-		local number = v.GetProperty('number').ToString()
-		local title = v.GetProperty('title').ToString()
+	local roots = NextJs.GetRootObjects(s)
+	local data
+	for _, root in ipairs(roots) do
+		data = NextJs.FindObject(root, function(v)
+			return type(v) == 'table' and v.langChapters
+		end)
 
-		title = (title ~= '') and (' - ' .. title) or ''
-
-		MANGAINFO.ChapterLinks.Add('manga/' .. slug .. '/chapters/' .. v.GetProperty('slug').ToString())
-		MANGAINFO.ChapterNames.Add('Chapter ' .. number .. title)
+		if data then
+			break
+		end
 	end
-	MANGAINFO.ChapterLinks.Reverse(); MANGAINFO.ChapterNames.Reverse()
+
+	if not data then return no_error end
+
+	local slug = URL:match('/([^/]+)$')
+	local chapters = data.langChapters
+	for i = #chapters, 1, -1 do
+		local ch = chapters[i]
+		if ch.coinPrice == 0 then
+			local number = ch.number
+			local title = ch.title
+
+			title = title and (' - ' .. title) or ''
+
+			MANGAINFO.ChapterLinks.Add('manga/' .. slug .. '/chapters/' .. ch.slug)
+			MANGAINFO.ChapterNames.Add('Chapter ' .. number .. title)
+		end
+	end
 
 	return no_error
 end
 
 -- Get the page count and/or page links for the current chapter.
 function GetPageNumber()
-	local json = require 'utils.json'
 	local u = MODULE.RootURL .. '/api' .. URL
 
 	if not HTTP.GET(u) then return false end
@@ -187,20 +231,14 @@ function GetPageNumber()
 
 	-- access token
 
-	HTTP.Reset()
-	HTTP.Headers.Values['X-Requested-With'] = 'XMLHttpRequest'
-	if not HTTP.POST(MODULE.RootURL .. '/api/reader/access-token') then return false end
-
-	local token = json.decode(HTTP.Document.ToString()).token
+	local token = GetReaderAccessToken(false)
+	if not token then return false end
 
 	-- page keys
 
-	HTTP.Reset()
-	HTTP.Headers.Values['X-Reader-Access-Token'] = token
-
-	if not HTTP.GET(MODULE.RootURL .. '/api/chapters/' .. chapter_id .. '/page-keys') then return false end
-
-	local page_keys = json.decode(HTTP.Document.ToString())
+	local page_keys
+	token, page_keys = FetchPageKeys(chapter_id, token)
+	if not page_keys then return false end
 
 	-- open
 
@@ -308,4 +346,22 @@ function DownloadImage()
 	puzzle.DeScramble(HTTP.Document, HTTP.Document)
 
 	return true
+end
+
+----------------------------------------------------------------------------------------------------
+-- Module Initialization
+----------------------------------------------------------------------------------------------------
+
+function Init()
+	local m = NewWebsiteModule()
+	m.ID                       = 'c280ce32f36843fbba73dcc891e979af'
+	m.Name                     = 'Philia Scans'
+	m.RootURL                  = 'https://philiascans.org'
+	m.Category                 = 'English-Scanlation'
+	m.OnGetDirectoryPageNumber = 'GetDirectoryPageNumber'
+	m.OnGetNameAndLink         = 'GetNameAndLink'
+	m.OnGetInfo                = 'GetInfo'
+	m.OnGetPageNumber          = 'GetPageNumber'
+	m.OnDownloadImage          = 'DownloadImage'
+	m.SortedList               = true
 end

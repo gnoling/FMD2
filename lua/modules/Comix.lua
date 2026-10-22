@@ -1,79 +1,358 @@
 ----------------------------------------------------------------------------------------------------
--- Module Initialization
-----------------------------------------------------------------------------------------------------
-
-function Init()
-	local m = NewWebsiteModule()
-	m.ID                       = '88a001d7619244ef98d13ecd869b8e64'
-	m.Name                     = 'Comix'
-	m.RootURL                  = 'https://comix.to'
-	m.Category                 = 'English'
-	m.OnGetDirectoryPageNumber = 'GetDirectoryPageNumber'
-	m.OnGetNameAndLink         = 'GetNameAndLink'
-	m.OnGetInfo                = 'GetInfo'
-	m.OnGetPageNumber          = 'GetPageNumber'
-	m.OnDownloadImage          = 'DownloadImage'
-	m.SortedList               = true
-	m.MaxTaskLimit             = 2
-	m.MaxConnectionLimit       = 4
-
-	local fmd = require 'fmd.env'
-	local slang = fmd.SelectedLanguage
-	local translations = {
-		['en'] = {
-			['showscangroup'] = 'Show scanlation group',
-			['deduplicatechapters'] = 'Deduplicate chapters (prefer official chapters, followed by the highest-voted or most recent)'
-		},
-		['id_ID'] = {
-			['showscangroup'] = 'Tampilkan grup scanlation',
-			['deduplicatechapters'] = 'Hapus bab ganda (utamakan bab resmi, diikuti yang paling banyak dipilih atau terbaru)'
-		}
-	}
-	local lang = translations[slang] or translations['en']
-	m.AddOptionCheckBox('showscangroup', lang.showscangroup, false)
-	m.AddOptionCheckBox('deduplicatechapters', lang.deduplicatechapters, false)
-end
-
-----------------------------------------------------------------------------------------------------
--- Local Constants
-----------------------------------------------------------------------------------------------------
-
-local API_URL = 'https://comix.to/api/v1'
-local DirectoryPagination = '/manga?order[created_at]=desc&limit=100&page='
-local crypto = require 'fmd.crypto'
-
-----------------------------------------------------------------------------------------------------
 -- Helper Functions
 ----------------------------------------------------------------------------------------------------
 
-local function GetNodejsScript(interceptor)
+local function GetMangaListFetchScript(page)
 	return [[
-	const resultJSON = await page.evaluate(async () => {
-		return new Promise((resolve) => {
+	const hookCode = `
+		window.__comixBrowsePayloads = [];
+		(() => {
 			const originalParse = JSON.parse;
-			let submitted = false;
-			
-			const submit = (data) => {
-				if (submitted) return;
-				submitted = true;
-				resolve(data);
-			};
-
 			JSON.parse = new Proxy(originalParse, {
 				apply(target, thisArg, args) {
 					const parsed = Reflect.apply(target, thisArg, args);
 					try {
-						]] .. interceptor .. [[
+						if (parsed && typeof parsed === 'object') {
+							const result = parsed.result || parsed;
+							if (result && Array.isArray(result.items)) window.__comixBrowsePayloads.push(result);
+						}
 					} catch (e) {}
 					return parsed;
 				}
 			});
+		})();
+	`;
+	page.on('request', (request) => {
+		let blocked = false;
+		try {
+			const path = new URL(request.url()).pathname;
+			blocked = ['/api/v1/client-errors', '/api/v1/threads/', '/assets/uploads/'].some((p) => path.startsWith(p));
+		} catch (e) {}
+		const act = blocked ? request.abort() : request.continue();
+		if (act && typeof act.catch === 'function') act.catch(() => {});
+	});
+	await page.setRequestInterception(true);
+	await page.evaluateOnNewDocument(hookCode);
+	await page.reload({ waitUntil: 'domcontentloaded', timeout: 90000 });
 
-			setTimeout(() => submit({ error: 'Timed out waiting for data' }), 60000);
+	const resultJSON = await page.evaluate(async (pageNumber) => {
+		return await new Promise((resolve) => {
+			let submitted = false;
+			let watchdog = null;
+			const finish = (data) => {
+				if (submitted) return;
+				submitted = true;
+				if (watchdog) clearTimeout(watchdog);
+				clearInterval(poll);
+				resolve(data);
+			};
+			watchdog = setTimeout(() => finish({ error: 'Timed out waiting for browse data' }), 45000);
+			const isMangaItems = (items) => items.length > 0 && items.every((item) => item &&
+				typeof item.title === 'string' &&
+				(typeof item.hid === 'string' || typeof item.url === 'string'));
+			const poll = setInterval(() => {
+				const payloads = window.__comixBrowsePayloads || [];
+				for (const result of payloads) {
+					if (!isMangaItems(result.items)) continue;
+					const meta = result.meta || {};
+					if (typeof meta.page === 'number' && meta.page !== pageNumber) continue;
+					const lastPage = (typeof meta.lastPage === 'number' && meta.lastPage) ||
+						(typeof meta.last_page === 'number' && meta.last_page) || null;
+					finish({
+						items: result.items.map((m) => ({
+							url: (typeof m.url === 'string' && m.url) || ('/title/' + m.hid),
+							title: m.title
+						})),
+						lastPage: lastPage
+					});
+					return;
+				}
+			}, 100);
+		});
+	}, ]] .. page .. [[);
+
+	console.log(JSON.stringify(resultJSON));
+	]]
+end
+
+local function GetChapterFetchScript(mid)
+	return [[
+	const hookCode = `
+		window.__comixChapterPages = [];
+		(() => {
+			const defineProperty = Object.defineProperty;
+			const consider = (holder) => setTimeout(() => {
+				try {
+					if (!holder.meta || !Array.isArray(holder.items)) return;
+					window.__comixChapterPages.push({ items: holder.items, meta: holder.meta });
+				} catch (e) {}
+			});
+			defineProperty(Object.prototype, 'items', {
+				configurable: true,
+				set(value) {
+					defineProperty(this, 'items', {
+						value: value,
+						writable: true,
+						enumerable: true,
+						configurable: true
+					});
+					consider(this);
+				}
+			});
+			Object.defineProperty = function (target, key, descriptor) {
+				const result = defineProperty.apply(this, arguments);
+				if (key === 'items' && descriptor && 'value' in descriptor) consider(target);
+				return result;
+			};
+		})();
+	`;
+	page.on('request', (request) => {
+		let blocked = false;
+		try {
+			const path = new URL(request.url()).pathname;
+			blocked = ['/api/v1/client-errors', '/api/v1/threads/', '/assets/uploads/'].some((p) => path.startsWith(p));
+		} catch (e) {}
+		const act = blocked ? request.abort() : request.continue();
+		if (act && typeof act.catch === 'function') act.catch(() => {});
+	});
+	await page.setRequestInterception(true);
+	await page.evaluateOnNewDocument(hookCode);
+	await page.reload({ waitUntil: 'domcontentloaded', timeout: 90000 });
+
+	const resultJSON = await page.evaluate(async (mangaId) => {
+		let info = null;
+		try {
+			const initialData = document.querySelector('script#initial-data');
+			if (initialData) {
+				const queries = JSON.parse(initialData.textContent).queries || {};
+				for (const key of Object.keys(queries)) {
+					if (key.includes('"detail"')) {
+						info = queries[key];
+						break;
+					}
+				}
+			}
+		} catch (e) {}
+
+		try {
+			return await new Promise((resolve) => {
+				let settled = false;
+				let watchdog = null;
+				const finish = (data) => {
+					if (settled) return;
+					settled = true;
+					if (watchdog) clearTimeout(watchdog);
+					clearInterval(poll);
+					resolve(data);
+				};
+				const fail = (message) => finish({ error: String(message) });
+				const resetWatchdog = () => {
+					if (watchdog) clearTimeout(watchdog);
+					watchdog = setTimeout(() => fail('Timed out waiting for chapter data'), 90000);
+				};
+
+				const chapterPath = '/title/' + mangaId + '-';
+				const maxPages = 1000;
+				const pageDelayMs = 500;
+				const chapters = [];
+				const isChapter = (item) => item &&
+					typeof item.id === 'number' &&
+					typeof item.number === 'number' &&
+					typeof item.url === 'string' &&
+					item.url.includes(chapterPath);
+				let page = 1;
+				let done = false;
+
+				const navigateToPage = (page) => {
+					const url = new URL(location.href);
+					url.searchParams.set('page', String(page));
+					history.pushState(history.state, '', url);
+					dispatchEvent(new PopStateEvent('popstate', { state: history.state }));
+				};
+
+				const handle = (holder) => {
+					if (done) return;
+					const items = holder.items;
+					const meta = holder.meta;
+					if (!meta || !Array.isArray(items) || !items.every(isChapter)) return;
+					if (items.length === 0 && meta.total !== 0) return;
+					if (typeof meta.page !== 'number' || typeof meta.lastPage !== 'number') {
+						done = true;
+						fail('Chapter list has no page numbers');
+						return;
+					}
+					if (meta.page !== page) return;
+					chapters.push(...items);
+					resetWatchdog();
+					if (!meta.hasNext || page >= Math.min(meta.lastPage, maxPages)) {
+						done = true;
+						const count = new Set(chapters.map((item) => item.id)).size;
+						if (count === meta.total) {
+							chapters.sort((a, b) => (a.number || 0) - (b.number || 0) || (a.id || 0) - (b.id || 0));
+							finish({ items: chapters, info: info });
+						} else {
+							fail('Got ' + count + ' of ' + meta.total + ' chapters');
+						}
+						return;
+					}
+					page++;
+					setTimeout(() => { try { navigateToPage(page); } catch (e) {} }, pageDelayMs);
+				};
+
+				const poll = setInterval(() => {
+					const queue = window.__comixChapterPages;
+					while (queue.length > 0) {
+						handle(queue.shift());
+						if (settled) return;
+					}
+				}, 100);
+				resetWatchdog();
+
+				navigateToPage(1);
+				setTimeout(() => { if (chapters.length === 0 && !done) navigateToPage(2); }, 4000);
+				setTimeout(() => { if (chapters.length === 0 && !done) navigateToPage(1); }, 8000);
+			});
+		} catch (e) {
+			return { error: e.message || String(e) };
+		}
+	}, ]] .. string.format('%q', mid) .. [[);
+
+	console.log(JSON.stringify(resultJSON));
+	]]
+end
+
+local function GetPageFetchScript()
+	return [[
+	const hookCode = `
+		window.__comixPagesHolder = null;
+		(() => {
+			const defineProperty = Object.defineProperty;
+			const consider = (holder) => setTimeout(() => {
+				try {
+					const items = holder.items;
+					if (holder.meta || !Array.isArray(items) || items.length === 0) return;
+					if (!items.every((item) => item && typeof item.url === 'string')) return;
+					if (window.__comixPagesHolder) return;
+					window.__comixPagesHolder = { baseUrl: holder.baseUrl, alt: holder.alt, node: holder.node, items: items };
+				} catch (e) {}
+			});
+			defineProperty(Object.prototype, 'items', {
+				configurable: true,
+				set(value) {
+					defineProperty(this, 'items', {
+						value: value,
+						writable: true,
+						enumerable: true,
+						configurable: true
+					});
+					consider(this);
+				}
+			});
+			Object.defineProperty = function (target, key, descriptor) {
+				const result = defineProperty.apply(this, arguments);
+				if (key === 'items' && descriptor && 'value' in descriptor) consider(target);
+				return result;
+			};
+		})();
+	`;
+	page.on('request', (request) => {
+		let blocked = false;
+		try {
+			const path = new URL(request.url()).pathname;
+			blocked = ['/api/v1/client-errors', '/api/v1/threads/', '/assets/uploads/'].some((p) => path.startsWith(p));
+		} catch (e) {}
+		const act = blocked ? request.abort() : request.continue();
+		if (act && typeof act.catch === 'function') act.catch(() => {});
+	});
+	await page.setRequestInterception(true);
+	await page.evaluateOnNewDocument(hookCode);
+	await page.reload({ waitUntil: 'domcontentloaded', timeout: 90000 });
+
+	const resultJSON = await page.evaluate(async () => {
+		return await new Promise((resolve) => {
+			let submitted = false;
+			let watchdog = null;
+			const finish = (data) => {
+				if (submitted) return;
+				submitted = true;
+				if (watchdog) clearTimeout(watchdog);
+				clearInterval(poll);
+				resolve(data);
+			};
+			watchdog = setTimeout(() => finish({ error: 'Timed out waiting for chapter pages' }), 60000);
+			const poll = setInterval(() => {
+				const holder = window.__comixPagesHolder;
+				if (!holder) return;
+				const base = String(holder.baseUrl || '').replace(/\/$/, '');
+				const links = [];
+				for (let i = 0; i < holder.items.length; i++) {
+					const item = holder.items[i];
+					let url = item.url.startsWith('http') ? item.url : base + '/' + item.url.replace(/^\//, '');
+					const isV3 = (item.s === 1) || url.includes('?v3') || url.includes('&v3');
+					const isLegacy = !isV3 && ((i + 1) % 4 === 0);
+					if (isV3) {
+						if (!url.includes('v3')) {
+							url += (url.includes('?') ? '&' : '?') + 'v3';
+						}
+					} else if (isLegacy) {
+						url += '#scrambled';
+					}
+					links.push(url);
+				}
+				finish({ links: links });
+			}, 100);
 		});
 	});
 	console.log(JSON.stringify(resultJSON));
 	]]
+end
+
+local function DecodeRunnerOutput(output)
+	local json = require 'utils.json'
+	local ok, decoded = pcall(json.decode, output)
+	if ok then return decoded end
+	local candidates = {}
+	for line in output:gmatch('[^\r\n]+') do
+		table.insert(candidates, line)
+	end
+	for i = #candidates, 1, -1 do
+		local ok2, decoded2 = pcall(json.decode, candidates[i])
+		if ok2 and type(decoded2) == 'table' then return decoded2 end
+	end
+	return nil
+end
+
+local function RunBrowserScript(url, js_code)
+	local json = require 'utils.json'
+	local nodejs = require 'utils.nodejs'
+	local output = nodejs.run_html_load_with_js(url, js_code)
+	local decoded = DecodeRunnerOutput(output)
+	if decoded and decoded.error and decoded.error:find('Execution context was destroyed', 1, true) then
+		output = nodejs.run_html_load_with_js(url, js_code)
+		decoded = DecodeRunnerOutput(output)
+	end
+	if decoded then return json.encode(decoded) end
+	return output
+end
+
+local function GetDirectoryPage(page)
+	local json = require 'utils.json'
+	local now = os.time()
+	local key = 'directory_' .. page
+	local output = MODULE.Storage[key]
+	local timestamp = tonumber(MODULE.Storage[key .. '_time']) or 0
+
+	if output == '' or (now - timestamp) >= 900 then
+		local js_code = GetMangaListFetchScript(page)
+		output = RunBrowserScript(MODULE.RootURL .. '/browse?order%5Bcreated_at%5D=desc&page=' .. page, js_code)
+
+		if not json.decode(output).error then
+			MODULE.Storage[key] = output
+			MODULE.Storage[key .. '_time'] = now
+		end
+	end
+
+	return output
 end
 
 local function GetPermutationMatrixLcg(seed, n)
@@ -214,24 +493,32 @@ end
 
 -- Get the page count of the manga list of the current website.
 function GetDirectoryPageNumber()
-	local u = API_URL .. DirectoryPagination .. 1
+	local json = require 'utils.json'
+	local data = json.decode(GetDirectoryPage(1))
 
-	if not HTTP.GET(u) then return net_problem end
+	if data.error then
+		print('Error: ' .. data.error)
+		return net_problem
+	end
 
-	PAGENUMBER = tonumber(CreateTXQuery(crypto.HTMLEncode(HTTP.Document.ToString())).XPathString('json(*).result.meta.lastPage')) or 1
+	PAGENUMBER = tonumber(data.lastPage) or 1
 
 	return no_error
 end
 
 -- Get links and names from the manga list of the current website.
 function GetNameAndLink()
-	local u = API_URL .. DirectoryPagination .. (URL + 1)
+	local json = require 'utils.json'
+	local data = json.decode(GetDirectoryPage(URL + 1))
 
-	if not HTTP.GET(u) then return net_problem end
+	if data.error then
+		print('Error: ' .. data.error)
+		return net_problem
+	end
 
-	for v in CreateTXQuery(crypto.HTMLEncode(HTTP.Document.ToString())).XPath('json(*).result.items()').Get() do
-		LINKS.Add('title/' .. v.GetProperty('hid').ToString() .. '-' .. v.GetProperty('slug').ToString())
-		NAMES.Add(v.GetProperty('title').ToString())
+	for _, v in ipairs(data.items or {}) do
+		LINKS.Add(v.url)
+		NAMES.Add(v.title)
 	end
 
 	return no_error
@@ -239,15 +526,32 @@ end
 
 -- Get info and chapter list for the current manga.
 function GetInfo()
+	local json = require 'utils.json'
 	local mid = URL:match('/title/([^%-]+)%-')
-	local u = MaybeFillHost(MODULE.RootURL, URL)
 
-	if not HTTP.GET(u) then return net_problem end
+	local now = os.time()
+	local output = MODULE.Storage[mid]
+	local timestamp = tonumber(MODULE.Storage[mid .. '_time']) or 0
 
-	local rc = HTTP.ResultCode
-	if (rc == 403) or (rc == 429) or (rc == 503) then MANGAINFO.Title = 'Cloudflare workaround is required' return no_error end
-	local x = CreateTXQuery(HTTP.Document)
-	local info = require 'utils.json'.decode(x.XPathString('//script[@id="initial-data"]')).queries['["manga","detail","' .. mid .. '"]']
+	if output == '' or (now - timestamp) >= 900 then
+		local js_code = GetChapterFetchScript(mid)
+		output = RunBrowserScript(MODULE.RootURL .. URL, js_code)
+
+		if not json.decode(output).error then
+			MODULE.Storage[mid] = output
+			MODULE.Storage[mid .. '_time'] = now
+		end
+	end
+
+	local data = json.decode(output)
+	if data.error then
+		MANGAINFO.Title = 'Error: ' .. data.error
+		print('Error: ' .. data.error)
+		return no_error
+	end
+
+	local info = data.info
+	if not info then return no_error end
 
 	local authors = {}
 	for _, author in ipairs(info.authors or {}) do
@@ -276,84 +580,41 @@ function GetInfo()
 
 	MANGAINFO.Title     = info.title
 	MANGAINFO.AltTitles = table.concat(info.altTitles or {}, ', ')
-	MANGAINFO.CoverLink = info.poster.medium
+	MANGAINFO.CoverLink = info.poster and info.poster.medium
 	MANGAINFO.Authors   = table.concat(authors, ', ')
 	MANGAINFO.Artists   = table.concat(artists, ', ')
 	MANGAINFO.Genres    = table.concat(genres, ', ')
 	MANGAINFO.Status    = MangaInfoStatusIfPos(info.status, 'releasing', 'finished', 'on_hiatus', 'discontinued')
 	MANGAINFO.Summary   = info.synopsis
 
-	local interceptor = [[
-		const items = window._capturedChapters || [];
-		window._capturedChapters = items;
-
-		if (parsed && parsed.result && Array.isArray(parsed.result.items) && parsed.result.items.length > 0) {
-			if (parsed.result.items[0].mangaId) {
-				const meta = parsed.result.meta || parsed.result.pagination;
-				for (const it of parsed.result.items) items.push(it);
-
-				if (meta && meta.hasNext) {
-					setTimeout(() => {
-						let btn = null;
-						const active = document.querySelector('.mchap-foot .npager__num.is-active');
-						if (active && active.nextElementSibling && active.nextElementSibling.classList.contains('npager__num')) {
-							btn = active.nextElementSibling;
-						}
-						if (btn && !btn.disabled) btn.click();
-					}, 200);
-				} else {
-					submit({ items: items });
-				}
-			}
-		}
-	]]
-
-	local now = os.time()
-	local output = MODULE.Storage[mid]
-	local timestamp = tonumber(MODULE.Storage[mid .. '_time']) or 0
-
-	if output == '' or (now - timestamp) >= 900 then
-		local js_code = GetNodejsScript(interceptor)
-		output = require 'utils.nodejs'.run_html_load_with_js(MODULE.RootURL .. URL, js_code)
-
-		if not output:find('Timed out', 1, true) then
-			MODULE.Storage[mid] = output
-			MODULE.Storage[mid .. '_time'] = tostring(now)
-		end
-	end
-	x.ParseHTML(output)
-
 	local deduplicate  = MODULE.GetOption('deduplicatechapters')
 	local optgroup     = MODULE.GetOption('showscangroup')
 	local chapter_map  = {}
 	local chapter_list = {}
 	local has_integer  = {}
+	local raw_chapters = {}
 
-	for v in x.XPath('json(*).items()').Get() do
-		local number = v.GetProperty('number').ToString()
-		local id = v.GetProperty('id').ToString()
-		local name = v.GetProperty('name').ToString()
-		local vol_num = v.GetProperty('volume').ToString()
-		local scan_group_id = tonumber(v.GetProperty('group').GetProperty('id').ToString()) or 0
-		local scan_group_name = v.GetProperty('group').GetProperty('name').ToString()
-		local votes = tonumber(v.GetProperty('votes').ToString()) or 0
-		local official_str = v.GetProperty('isOfficial').ToString()
-		local official = (official_str == '1' or official_str == 'true') and 1 or 0
-		local url = v.GetProperty('url').ToString()
-
-		if not number:find('%.') then
-			has_integer[number] = true
-		end
+	for _, v in ipairs(data.items or {}) do
+		local number = tostring(v.number)
+		local id = v.id
+		local name = v.name
+		local vol_num = v.volume
+		local group = type(v.group) == 'table' and v.group or {}
+		local scan_group_id = group.id or 0
+		local scan_group_name = group.name
+		local votes = v.votes or 0
+		local official = v.isOfficial
+		local url = v.url
 
 		if not deduplicate then
-			local volume = (vol_num ~= '0') and ('Vol. ' .. vol_num .. ' ') or ''
-			local chapter = (number ~= '') and ('Ch. ' .. number) or ''
-			local title = (name ~= '') and (' - ' .. name) or ''
+			local volume = (vol_num ~= 0) and ('Vol. ' .. vol_num .. ' ') or ''
+			local chapter = number ~= '' and ('Ch. ' .. number) or ''
+			local title = name ~= '' and (' - ' .. name) or ''
 			local scanlator = ''
 			if optgroup then
-				if scan_group_name ~= '' then
+				if scan_group_name then
 					scanlator = ' [' .. scan_group_name .. ']'
-				elseif official == 1 then
+				elseif official then
 					scanlator = ' [Official]'
 				else
 					scanlator = ' [Unknown]'
@@ -363,22 +624,33 @@ function GetInfo()
 			MANGAINFO.ChapterLinks.Add(url)
 			MANGAINFO.ChapterNames.Add(volume .. chapter .. title .. scanlator)
 		else
-			local base = number:match('^(%d+)')
-			local key = (base and has_integer[base]) and base or number
-			local current = chapter_map[key]
-			local ch_data = {
+			table.insert(raw_chapters, {
 				id = id, name = name, vol_num = vol_num, number = number,
 				scan_group_id = scan_group_id, scan_group_name = scan_group_name,
 				votes = votes, official = official, url = url
-			}
+			})
+		end
+	end
+
+	if deduplicate then
+		for _, ch in ipairs(raw_chapters) do
+			if not ch.number:find('%.') then
+				has_integer[ch.number] = true
+			end
+		end
+
+		for _, ch in ipairs(raw_chapters) do
+			local base = ch.number:match('^(%d+)')
+			local key = (base and has_integer[base]) and base or ch.number
+			local current = chapter_map[key]
 
 			if not current then
-				chapter_map[key] = ch_data
+				chapter_map[key] = ch
 				table.insert(chapter_list, key)
 			else
-				local new_official = ch_data.official == 1
-				local cur_official = current.official == 1
-				local new_group = ch_data.scan_group_id == 10702
+				local new_official = ch.official
+				local cur_official = current.official
+				local new_group = ch.scan_group_id == 10702
 				local cur_group = current.scan_group_id == 10702
 				local better = false
 
@@ -386,31 +658,29 @@ function GetInfo()
 					better = new_official
 				elseif new_group ~= cur_group then
 					better = new_group
-				elseif ch_data.votes ~= current.votes then
-					better = ch_data.votes > current.votes
+				elseif ch.votes ~= current.votes then
+					better = ch.votes > current.votes
 				else
-					better = ch_data.id > current.id
+					better = ch.id > current.id
 				end
 
 				if better then
-					chapter_map[key] = ch_data
+					chapter_map[key] = ch
 				end
 			end
 		end
-	end
 
-	if deduplicate then
 		for _, key in ipairs(chapter_list) do
 			local ch = chapter_map[key]
 
-			local volume = (ch.vol_num ~= '0') and ('Vol. ' .. ch.vol_num .. ' ') or ''
-			local chapter = (ch.number ~= '') and ('Ch. ' .. ch.number) or ''
-			local title = (ch.name ~= '') and (' - ' .. ch.name) or ''
+			local volume = (ch.vol_num ~= 0) and ('Vol. ' .. ch.vol_num .. ' ') or ''
+			local chapter = ch.number ~= '' and ('Ch. ' .. ch.number) or ''
+			local title = ch.name ~= '' and (' - ' .. ch.name) or ''
 			local scanlator = ''
 			if optgroup then
-				if ch.scan_group_name ~= '' then
+				if ch.scan_group_name then
 					scanlator = ' [' .. ch.scan_group_name .. ']'
-				elseif ch.official == 1 then
+				elseif ch.official then
 					scanlator = ' [Official]'
 				else
 					scanlator = ' [Unknown]'
@@ -421,48 +691,28 @@ function GetInfo()
 			MANGAINFO.ChapterNames.Add(volume .. chapter .. title .. scanlator)
 		end
 	end
-	MANGAINFO.ChapterLinks.Reverse(); MANGAINFO.ChapterNames.Reverse()
 
 	return no_error
 end
 
 -- Get the page count and/or page links for the current chapter.
 function GetPageNumber()
-	local interceptor = [[
-		if (parsed && parsed.result && parsed.result.pages) {
-			const res = parsed.result;
-			const links = [];
-			const pages = res.pages;
-			const items = pages.items || (Array.isArray(pages) ? pages : []);
-			let base = (pages.baseUrl || '').replace(/\/$/, '');
-
-			for (let i = 0; i < items.length; i++) {
-				let item = items[i];
-				let url = typeof item === 'string' ? item : item.url;
-				if (!url) continue;
-				let full = url.startsWith('http') ? url : base + '/' + url.replace(/^\//, '');
-				
-				let isV3 = (item.s === 1) || full.includes('?v3') || full.includes('&v3');
-				let isLegacy = !isV3 && ((i + 1) % 4 === 0);
-				
-				if (isV3) {
-					if (!full.includes('v3')) {
-						full += (full.includes('?') ? '&' : '?') + 'v3';
-					}
-				} else if (isLegacy) {
-					full += '#scrambled';
-				}
-				links.push(full);
-			}
-			submit({ links: links });
-		}
-	]]
-
+	local json = require 'utils.json'
 	local output = MODULE.Storage[URL]
 	if output == '' then
-		local js_code = GetNodejsScript(interceptor)
-		output = require 'utils.nodejs'.run_html_load_with_js(MODULE.RootURL .. URL, js_code)
-		MODULE.Storage[URL] = output
+		local js_code = GetPageFetchScript()
+		output = RunBrowserScript(MODULE.RootURL .. URL, js_code)
+
+		if not json.decode(output).error then
+			MODULE.Storage[URL] = output
+		end
+	end
+
+	local ok, decoded = pcall(json.decode, output)
+	if not ok or type(decoded) ~= 'table' or decoded.error then
+		local msg = (ok and type(decoded) == 'table' and decoded.error) or 'unexpected chapter page response'
+		print('Error: ' .. msg)
+		return false
 	end
 
 	CreateTXQuery(output).XPathStringAll('json(*).links()', TASK.PageLinks)
@@ -472,14 +722,6 @@ end
 
 -- Download, decrypt and/or descramble image given the image URL.
 function DownloadImage()
-	local is_legacy_scramble = URL:find('#scrambled', 1, true)
-	local is_comix = URL:find('comix.to', 1, true)
-
-	HTTP.Headers.Values['Referer'] = MODULE.RootURL .. '/'
-	if is_comix or is_legacy_scramble then
-		HTTP.Headers.Values['Origin'] = MODULE.RootURL
-	end
-
 	if not HTTP.GET(URL) then return false end
 
 	local enc_seed = tonumber(HTTP.Headers.Values['X-Enc-Seed'])
@@ -526,4 +768,40 @@ function DownloadImage()
 	end
 
 	return true
+end
+
+----------------------------------------------------------------------------------------------------
+-- Module Initialization
+----------------------------------------------------------------------------------------------------
+
+function Init()
+	local m = NewWebsiteModule()
+	m.ID                       = '88a001d7619244ef98d13ecd869b8e64'
+	m.Name                     = 'Comix'
+	m.RootURL                  = 'https://comix.to'
+	m.Category                 = 'English'
+	m.OnGetDirectoryPageNumber = 'GetDirectoryPageNumber'
+	m.OnGetNameAndLink         = 'GetNameAndLink'
+	m.OnGetInfo                = 'GetInfo'
+	m.OnGetPageNumber          = 'GetPageNumber'
+	m.OnDownloadImage          = 'DownloadImage'
+	m.SortedList               = true
+	m.MaxTaskLimit             = 2
+	m.MaxConnectionLimit       = 4
+
+	local fmd = require 'fmd.env'
+	local slang = fmd.SelectedLanguage
+	local translations = {
+		['en'] = {
+			['showscangroup'] = 'Show scanlation group',
+			['deduplicatechapters'] = 'Deduplicate chapters (prefer official chapters, followed by the highest-voted or most recent)'
+		},
+		['id_ID'] = {
+			['showscangroup'] = 'Tampilkan grup scanlation',
+			['deduplicatechapters'] = 'Hapus bab ganda (utamakan bab resmi, diikuti oleh yang paling banyak mendapat suara atau terbaru)'
+		}
+	}
+	local lang = translations[slang] or translations['en']
+	m.AddOptionCheckBox('showscangroup', lang.showscangroup, false)
+	m.AddOptionCheckBox('deduplicatechapters', lang.deduplicatechapters, false)
 end

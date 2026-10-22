@@ -1,20 +1,4 @@
 ----------------------------------------------------------------------------------------------------
--- Module Initialization
-----------------------------------------------------------------------------------------------------
-
-function Init()
-	local m = NewWebsiteModule()
-	m.ID                       = 'K042a85566244b7e836679491ce67ot0'
-	m.Name                     = 'ManhwaWeb'
-	m.RootURL                  = 'https://www.manhwaweb.com'
-	m.Category                 = 'Spanish'
-	m.OnGetNameAndLink         = 'GetNameAndLink'
-	m.OnGetInfo                = 'GetInfo'
-	m.OnGetPageNumber          = 'GetPageNumber'
-	m.SortedList               = true
-end
-
-----------------------------------------------------------------------------------------------------
 -- Local Constants
 ----------------------------------------------------------------------------------------------------
 
@@ -68,9 +52,20 @@ function GetInfo()
 	MANGAINFO.Summary   = x.XPathString('_sinopsis', info)
 
 	for v in x.XPath('chapters?*', info).Get() do
-		MANGAINFO.ChapterLinks.Add(v.GetProperty('link').ToString())
-		MANGAINFO.ChapterNames.Add('Capítulo ' .. v.GetProperty('chapter').ToString())
-	end  
+		local link = v.GetProperty('link').ToString()
+
+		if link == '' then
+			link = x.XPathString('versions?*?link', v)
+		end
+
+		if link ~= '' then
+			MANGAINFO.ChapterLinks.Add(link)
+			MANGAINFO.ChapterNames.Add('Capítulo ' .. v.GetProperty('chapter').ToString())
+		end
+	end   
+
+	HTTP.Reset()
+	HTTP.Headers.Values['Referer'] = MANGAINFO.URL
 
 	return no_error
 end
@@ -84,4 +79,28 @@ function GetPageNumber()
 	CreateTXQuery(HTTP.Document).XPathStringAll('json(*).chapter.img()', TASK.PageLinks)
 
 	return true
+end
+
+-- Prepare the URL, http header and/or http cookies before downloading an image.
+function BeforeDownloadImage()
+	HTTP.Headers.Values['Referer'] = MODULE.RootURL
+
+	return true
+end
+
+----------------------------------------------------------------------------------------------------
+-- Module Initialization
+----------------------------------------------------------------------------------------------------
+
+function Init()
+	local m = NewWebsiteModule()
+	m.ID                       = 'K042a85566244b7e836679491ce67ot0'
+	m.Name                     = 'ManhwaWeb'
+	m.RootURL                  = 'https://www.manhwaweb.com'
+	m.Category                 = 'Spanish'
+	m.OnGetNameAndLink         = 'GetNameAndLink'
+	m.OnGetInfo                = 'GetInfo'
+	m.OnGetPageNumber          = 'GetPageNumber'
+	m.OnBeforeDownloadImage    = 'BeforeDownloadImage'
+	m.SortedList               = true
 end
