@@ -31,7 +31,7 @@ var
 implementation
 
 uses
-  Math, BaseThread, uBaseUnit,
+  Math, BaseThread, FMDOptions, uBaseUnit,
   LuaPackage, LuaClass, LuaUtils,
   LuaCriticalSection, LuaMemoryStream,
   LuaBaseUnit, LuaSynaUtil,
@@ -165,6 +165,18 @@ begin
     luaL_openlibs(Result);
     LuaBaseRegisterAll(Result);
     LuaPackage.RegisterLoader(Result);
+    {$ifndef windows}
+    // Windows' default cpath starts with "!\?.dll", the program directory,
+    // which is where FMD ships C modules such as pb.dll. Lua's Unix default
+    // has no equivalent and only searches system paths and the current
+    // directory, so put the program directory first here too.
+    lua_getglobal(Result, 'package');
+    lua_pushstring(Result, PAnsiChar(FMD_DIRECTORY + '?.so;'));
+    lua_getfield(Result, -2, 'cpath');
+    lua_concat(Result, 2);
+    lua_setfield(Result, -2, 'cpath');
+    lua_pop(Result, 1);
+    {$endif}
     lua_sethook(Result, @luabase_terminatehook, LUA_MASKCOUNT, 1000);
   except
     on E: Exception do

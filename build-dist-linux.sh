@@ -30,6 +30,13 @@ mkdir -p "$DEST"
 # --- binary + custom library -------------------------------------------------
 cp "$BIN/fmd" "$DEST/fmd"
 cp "$BIN/libduktape_fmd.so" "$DEST/libduktape_fmd.so"
+# lua-protobuf, needed by MangaPlus (build with scripts/build-luapb-linux.sh)
+if [[ -f "$BIN/pb.so" ]]; then
+  cp "$BIN/pb.so" "$DEST/pb.so"
+else
+  echo "warning: $BIN/pb.so not found, MangaPlus will not load." >&2
+  echo "         build it with scripts/build-luapb-linux.sh" >&2
+fi
 # the binary finds libduktape_fmd.so next to itself via an $ORIGIN runpath
 patchelf --set-rpath '$ORIGIN' "$DEST/fmd"
 

@@ -8,6 +8,7 @@ This is a self-contained application folder. To run it:
 Everything the app ships itself is in this folder:
     fmd                 - the program
     libduktape_fmd.so   - JavaScript engine used by site modules
+    pb.so               - protobuf decoder used by the MangaPlus module
     lua/                - website modules + Lua runtime scripts
     languages/          - UI translations
     images/             - UI icons
