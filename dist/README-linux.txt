@@ -28,8 +28,9 @@ desktop with GTK2 plus a handful of common libraries. On Debian/Ubuntu:
         libwebp7 libbrotli1 libzstd1 p7zip-full
 
 Notes:
-  * libssl3  - if your system still ships OpenSSL 1.1, install libssl1.1
-               instead; the app loads whichever it finds.
+  * libssl3  - required: the program links against OpenSSL 3's
+               libcrypto.so.3 and will not start without it. OpenSSL 1.1
+               alone is not enough.
   * p7zip-full provides the "7za" command used to pack downloads into .cbz/.zip
                and to extract downloaded server manga-lists. Without it,
                downloading works but archiving/those lists will not.
