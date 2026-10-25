@@ -8,7 +8,7 @@ function getinfo()
 		if MANGAINFO.Title == '' then
 			MANGAINFO.Title = x.XPathString('//div[@class="folder-title"]/a[last()]')
 		end
-		MANGAINFO.CoverLink = x.XPathString('(//img[@class="doujin"])[1]/@data-thumb')
+		MANGAINFO.CoverLink = x.XPathString('(//img[contains(concat(" ", normalize-space(@class), " "), " doujin ")])[1]/@data-thumb')
 		MANGAINFO.Authors=x.XPathStringAll('//div[@class="gallery-artist"]/a')
 		MANGAINFO.Artists=x.XPathStringAll('//div[@class="gallery-artist"]/a')
 		MANGAINFO.Genres=x.XPathStringAll('//li[@class="tag-area"]/a')
@@ -24,7 +24,7 @@ function getpagenumber()
 	TASK.PageLinks.Clear()
 	if HTTP.GET(MaybeFillHost(MODULE.RootURL, URL)) then
 		local x=CreateTXQuery(HTTP.Document)
-		x.XPathStringAll('//img[@class="doujin"]/@data-file', TASK.PageLinks)
+		x.XPathStringAll('//img[contains(concat(" ", normalize-space(@class), " "), " doujin ")]/@data-file', TASK.PageLinks)
 	else
 		return false
 	end
