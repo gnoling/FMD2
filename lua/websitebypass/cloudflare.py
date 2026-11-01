@@ -15,10 +15,14 @@ except (ImportError, FileNotFoundError):
     ROOKIEPY_AVAILABLE = False
 
 script_path = Path(__file__)
-if (Path(__file__)/ '..' / 'lua/websitebypass').exists():
-    websitebypass_path = Path(__file__)/ '..' / 'lua/websitebypass'
+# The script's own folder. "Path(__file__) / '..'" only means that on Windows,
+# which collapses ".." textually; Linux resolves it through the file itself
+# and fails with "Not a directory".
+script_dir = script_path.resolve().parent
+if (script_dir / 'lua/websitebypass').exists():
+    websitebypass_path = script_dir / 'lua/websitebypass'
 else:
-    websitebypass_path = Path(__file__)/ '..'
+    websitebypass_path = script_dir
 debug_path = (websitebypass_path / 'debug').resolve()
 
 class CloudSolver:

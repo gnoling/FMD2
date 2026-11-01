@@ -40,3 +40,7 @@ baseunits/revision.inc
 # generated linux dist artifacts (build-dist-linux.sh)
 dist/FMD2-*-linux/
 dist/FMD2-*-linux.tar.gz
+
+# runtime state written by the Cloudflare bypass script
+lua/websitebypass/temp_cloudflare.json
+lua/websitebypass/debug/

@@ -268,8 +268,15 @@ function _m.applyCookies(self, parsedJSON, url, http_m)
 	end
 end
 
+-- Paths are built from FMD's own lua directory with the platform's separator,
+-- so they work whatever the working directory is and on non-Windows systems.
+local function bypass_path(name)
+	local sep = package.config:sub(1, 1)
+	return fmd.LuaDirectory .. 'websitebypass' .. sep .. name
+end
+
 function load_config()
-	local config_json = [[lua\websitebypass\websitebypass_config.json]]
+	local config_json = bypass_path('websitebypass_config.json')
 	if not (fileExist(config_json)) then
 		local config_table = {
 		use_webdriver = false,
@@ -340,8 +347,9 @@ function _m.bypass(self, METHOD, URL)
 
 	load_config()
 
-	webdriver_exe = 'python'
-	webdriver_script = [[lua\websitebypass\cloudflare.py]]
+	-- Windows installs "python"; most Linux distributions only provide "python3".
+	webdriver_exe = package.config:sub(1, 1) == '\\' and 'python' or 'python3'
+	webdriver_script = bypass_path('cloudflare.py')
 	flaresolverr = false
 	if use_webdriver then
 		-- use FlareSolverr url to check if it running
