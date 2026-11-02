@@ -1,7 +1,7 @@
 | Website | URL | Module status | Last checked date | Comment |
 |:---|:---|:---:|:---:|:---:|
-| 11Toon | [![https://www.11toon.com](https://img.shields.io/website?url=https://www.11toon.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://www.11toon.com)](https://www.11toon.com) | - | - | - |
-| 18Kami | [![https://18kami.com](https://img.shields.io/website?url=https://18kami.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://18kami.com)](https://18kami.com) | - | - | - |
+| 18Comic | [![https://18comic.vip](https://img.shields.io/website?url=https://18comic.vip%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://18comic.vip)](https://18comic.vip) | OK | 01.11.2026 | - |
+| 11Toon | [![https://www.11toon.com](https://img.shields.io/website?url=https://www.11toon.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://www.11toon.com)](https://www.11toon.com) | OK | 01.11.2026 | - |
 | 1MangaCo | [![https://1manga.co](https://img.shields.io/website?url=https://1manga.co%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://1manga.co)](https://1manga.co) | OK | 02.10.2026 | - |
 | 1stKissManhua | [![https://1stkissmanhua.net](https://img.shields.io/website?url=https://1stkissmanhua.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://1stkissmanhua.net)](https://1stkissmanhua.net) | OK | 30.03.2025 | - |
 | 3asq | [![https://3asq.online](https://img.shields.io/website?url=https://3asq.online%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://3asq.online)](https://3asq.online) | OK | 25.07.2026 | - |
@@ -48,7 +48,7 @@
 | Borat Scans | [![https://boratscans.com](https://img.shields.io/website?url=https://boratscans.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://boratscans.com)](https://boratscans.com) | OK | 19.04.2025 | Paid chapters are hidden |
 | BoredomSociety | [![https://www.boredomsociety.xyz](https://img.shields.io/website?url=https://www.boredomsociety.xyz%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://www.boredomsociety.xyz)](https://www.boredomsociety.xyz) | - | - | - |
 | BrainRotComics | [![https://brainrotcomics.com](https://img.shields.io/website?url=https://brainrotcomics.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://brainrotcomics.com)](https://brainrotcomics.com) | OK | 14.02.2026 | - |
-| CapibaraTraductor | [![https://capibaratraductor.com](https://img.shields.io/website?url=https://capibaratraductor.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://capibaratraductor.com)](https://capibaratraductor.com) | OK | 25.05.2026 | - |
+| CapibaraTraductor | [![https://capibaratraductor.com](https://img.shields.io/website?url=https://capibaratraductor.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://capibaratraductor.com)](https://capibaratraductor.com) | OK | 30.10.2026 | - |
 | Cartel De Manhwas | [![https://carteldemanhwas.net](https://img.shields.io/website?url=https://carteldemanhwas.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://carteldemanhwas.net)](https://carteldemanhwas.net) | OK | 08.08.2025 | - |
 | CartoonPorn | [![https://cartoonporn.to](https://img.shields.io/website?url=https://cartoonporn.to%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://cartoonporn.to)](https://cartoonporn.to) | OK | 28.04.2025 | - |
 | CatManga | [![https://catmanga.org](https://img.shields.io/website?url=https://catmanga.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://catmanga.org)](https://catmanga.org) | - | - | - |
@@ -68,7 +68,7 @@
 | Comico | [![http://www.comico.jp](https://img.shields.io/website?url=http://www.comico.jp%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=http://www.comico.jp)](http://www.comico.jp) | - | - | - |
 | ComicoCoID | [![http://www.comico.co.id](https://img.shields.io/website?url=http://www.comico.co.id%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=http://www.comico.co.id)](http://www.comico.co.id) | - | - | - |
 | ComicVn | [![https://beeng.net](https://img.shields.io/website?url=https://beeng.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://beeng.net)](https://beeng.net) | - | - | - |
-| Comix | [![https://comix.to](https://img.shields.io/website?url=https://comix.to%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://comix.to)](https://comix.to) | OK | 12.10.2026 | Node.js is required |
+| Comix | [![https://comix.to](https://img.shields.io/website?url=https://comix.to%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://comix.to)](https://comix.to) | OK | 23.10.2026 | Node.js is required |
 | CopyPasteScanlation | [![https://www.cpscan.xyz](https://img.shields.io/website?url=https://www.cpscan.xyz%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://www.cpscan.xyz)](https://www.cpscan.xyz) | - | - | - |
 | CoYuHi | [![http://www.universoyuri.com](https://img.shields.io/website?url=http://www.universoyuri.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=http://www.universoyuri.com)](http://www.universoyuri.com) | - | - | - |
 | CrotPedia | [![https://crotpedia.net](https://img.shields.io/website?url=https://crotpedia.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://crotpedia.net)](https://crotpedia.net) | - | - | - |
@@ -134,7 +134,7 @@
 | HDoujin Galleries | [![https://hdoujin.org](https://img.shields.io/website?url=https://hdoujin.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://hdoujin.org)](https://hdoujin.org) | OK | 08.08.2025 | Clearance value is required. See [here](https://github.com/dazedcat19/FMD2/issues/2059#issuecomment-3165236854) |
 | HenChan | [![https://x4.h-chan.me](https://img.shields.io/website?url=https://x4.h-chan.me%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://x4.h-chan.me)](https://x4.h-chan.me) | OK | 19.08.2025 | - |
 | Hentai20 | [![https://hentai20.io](https://img.shields.io/website?url=https://hentai20.io%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://hentai20.io)](https://hentai20.io) | OK | 17.08.2025 | - |
-| Hentai2Read | [![https://hentai2read.com](https://img.shields.io/website?url=https://hentai2read.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://hentai2read.com)](https://hentai2read.com) | - | - | - |
+| Hentai2Read | [![https://hentai2read.com](https://img.shields.io/website?url=https://hentai2read.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://hentai2read.com)](https://hentai2read.com) | OK | 23.10.2026 | - |
 | Hentaidexy | [![https://dexyscan.com](https://img.shields.io/website?url=https://dexyscan.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://dexyscan.com)](https://dexyscan.com) | Broken | 01.08.2025 | Images don't load in the browser |
 | Hentaiera | [![https://hentaiera.com/](https://img.shields.io/website?url=https://hentaiera.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://hentaiera.com)](https://hentaiera.com) | OK | 12.04.2026 | - |
 | HentaiForce | [![https://hentaiforce.net](https://img.shields.io/website?url=https://hentaiforce.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://hentaiforce.net)](https://hentaiforce.net) | - | - | - |
@@ -157,7 +157,7 @@
 | HolyManga | [![https://www.holymanga.net](https://img.shields.io/website?url=https://www.holymanga.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://www.holymanga.net)](https://www.holymanga.net) | OK | 13.01.2025 | - |
 | HunlightScans | [![https://hunlight-scans.info](https://img.shields.io/website?url=https://hunlight-scans.info%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://hunlight-scans.info)](https://hunlight-scans.info) | - | - | - |
 | Ikigai Mangas | [![https://visualikigai.cmpunjabrashancard.pk](https://img.shields.io/website?url=https://visualikigai.cmpunjabrashancard.pk%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://visualikigai.cmpunjabrashancard.pk)](https://visualikigai.cmpunjabrashancard.pk) | OK | 01.10.2026 | - |
-| Ikiru | [![https://06.ikiru.wtf](https://img.shields.io/website?url=https://06.ikiru.wtf%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://06.ikiru.wtf)](https://06.ikiru.wtf) | OK | 01.07.2026 | - |
+| Ikiru | [![https://09.ikiru.wtf](https://img.shields.io/website?url=https://09.ikiru.wtf%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://09.ikiru.wtf)](https://09.ikiru.wtf) | OK | 24.10.2026 | - |
 | Imgur | [![https://imgur.com](https://img.shields.io/website?url=https://imgur.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://imgur.com)](https://imgur.com) | - | - | - |
 | IMHentai | [![https://imhentai.xxx](https://img.shields.io/website?url=https://imhentai.xxx%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://imhentai.xxx)](https://imhentai.xxx) | OK | 12.03.2025 | - |
 | Inari Manga | [![https://inarimanga.yomod.xyz](https://img.shields.io/website?url=https://inarimanga.yomod.xyz%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://inarimanga.yomod.xyz)](https://inarimanga.yomod.xyz) | OK | 23.05.2025 | - |
@@ -177,12 +177,12 @@
 | KaliScanIo | [![https://kaliscan.io](https://img.shields.io/website?url=https://kaliscan.io%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://kaliscan.io)](https://kaliscan.io) | OK | 27.04.2026 | - |
 | KaliScanMe | [![https://kaliscan.me](https://img.shields.io/website?url=https://kaliscan.me%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://kaliscan.me)](https://kaliscan.me) | OK | 27.04.2026 | - |
 | Kanzenin | [![https://kanzenin.info](https://img.shields.io/website?url=https://kanzenin.info%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://kanzenin.info)](https://kanzenin.info) | - | - | - |
-| KappaBeast | [![https://kappabeast.com](https://img.shields.io/website?url=https://kappabeast.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://kappabeast.com)](https://kappabeast.com) | OK | 28.09.2026 | - |
+| KappaBeast | [![https://kappabeast.com](https://img.shields.io/website?url=https://kappabeast.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://kappabeast.com)](https://kappabeast.com) | OK | 01.11.2026 | - |
 | Kayn Scans | [![https://kaynscans.com](https://img.shields.io/website?url=https://kaynscans.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://kaynscans.com)](https://kaynscans.com) | OK | 30.08.2026 | Paid chapters are hidden by default |
 | Ken Scans | [![https://kenscans.org](https://img.shields.io/website?url=https://kenscans.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://kenscans.org)](https://kenscans.org) | OK | 10.10.2026 | Paid chapters are hidden by default |
 | Kewn Scans | [![https://kewnscans.org](https://img.shields.io/website?url=https://kewnscans.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://kewnscans.org)](https://kewnscans.org) | OK | 09.01.2025 | - |
 | Kira Scans | [![https://kirascans.com](https://img.shields.io/website?url=https://kirascans.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://kirascans.com)](https://kirascans.com) | OK | 20.09.2025 | - |
-| Kiryuu | [![https://v6.kiryuu.to](https://img.shields.io/website?url=https://v6.kiryuu.to%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://v6.kiryuu.to)](https://v6.kiryuu.to) | OK | 01.07.2026 | - |
+| Kiryuu | [![https://v7.kiryuu.to](https://img.shields.io/website?url=https://v7.kiryuu.to%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://v7.kiryuu.to)](https://v7.kiryuu.to) | OK | 24.10.2026 | - |
 | KissManga | [![https://kissmanga.org](https://img.shields.io/website?url=https://kissmanga.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://kissmanga.org)](https://kissmanga.org) | - | - | - |
 | KissMangaIN | [![https://kissmanga.in](https://img.shields.io/website?url=https://kissmanga.in%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://kissmanga.in)](https://kissmanga.in) | - | - | - |
 | KKJ | [![https://kkjscans.co](https://img.shields.io/website?url=https://kkjscans.co%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://kkjscans.co)](https://kkjscans.co) | - | - | - |
@@ -318,6 +318,7 @@
 | MangaPandaOnl | [![https://mangapanda.onl](https://img.shields.io/website?url=https://mangapanda.onl%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://mangapanda.onl)](https://mangapanda.onl) | OK | 02.10.2026 | - |
 | MangaPark | [![https://mangapark.net](https://img.shields.io/website?url=https://mangapark.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://mangapark.net)](https://mangapark.net) | OK | 15.12.2025 | - |
 | MangaPill | [![https://mangapill.com](https://img.shields.io/website?url=https://mangapill.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://mangapill.com)](https://mangapill.com) | OK | 15.08.2025 | - |
+| MangaPlus Creators | [![https://mangaplus-creators.jp](https://img.shields.io/website?url=https://mangaplus-creators.jp%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://mangaplus-creators.jp)](https://mangaplus-creators.jp) | OK | 01.11.2026 | - |
 | MangaPlus | [![https://mangaplus.shueisha.co.jp](https://img.shields.io/website?url=https://mangaplus.shueisha.co.jp%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://mangaplus.shueisha.co.jp)](https://mangaplus.shueisha.co.jp) | OK | 22.07.2026 | - |
 | MangaRaw1001 | [![https://mangaraw1001.cc](https://img.shields.io/website?url=https://mangaraw1001.cc%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://mangaraw1001.cc)](https://mangaraw1001.cc) | OK | 20.01.2025 | - |
 | MangaRead | [![https://www.mangaread.org](https://img.shields.io/website?url=https://www.mangaread.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://www.mangaread.org)](https://www.mangaread.org) | OK | 12.12.2025 | - |
@@ -330,7 +331,6 @@
 | MangaSail | [![https://www.mangasail.co](https://img.shields.io/website?url=https://www.mangasail.co%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://www.mangasail.co)](https://www.mangasail.co) | - | - | - |
 | MangaSaki | [![https://www.mangasaki.com](https://img.shields.io/website?url=https://www.mangasaki.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://www.mangasaki.com)](https://www.mangasaki.com) | - | - | - |
 | MangaShiro | [![https://mangashiro.me](https://img.shields.io/website?url=https://mangashiro.me%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://mangashiro.me)](https://mangashiro.me) | - | - | - |
-| MangaShow | [![https://mangashow.me](https://img.shields.io/website?url=https://mangashow.me%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://mangashow.me)](https://mangashow.me) | - | - | - |
 | Mangastk18 | [![https://mangastk18.com](https://img.shields.io/website?url=https://mangastk18.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://mangastk18.com)](https://mangastk18.com) | - | - | - |
 | MangaStream | [![https://readms.net](https://img.shields.io/website?url=https://readms.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://readms.net)](https://readms.net) | - | - | - |
 | MangaSushi | [![https://mangasushi.org](https://img.shields.io/website?url=https://mangasushi.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://mangasushi.org)](https://mangasushi.org) | - | - | - |
@@ -360,6 +360,7 @@
 | MangaZuki | [![https://mangazuki.co](https://img.shields.io/website?url=https://mangazuki.co%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://mangazuki.co)](https://mangazuki.co) | - | - | - |
 | MangaZukiRaws | [![https://raws.mangazuki.co](https://img.shields.io/website?url=https://raws.mangazuki.co%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://raws.mangazuki.co)](https://raws.mangazuki.co) | - | - | - |
 | Manhastro | [![https://manhastro.net](https://img.shields.io/website?url=https://manhastro.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhastro.net)](https://manhastro.net) | OK | 19.04.2025 | - |
+| Manhua Top | [![https://manhuatop.org](https://img.shields.io/website?url=https://manhuatop.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhuatop.org)](https://manhuatop.org) | - | - | - |
 | ManhuaAZ | [![https://manhuaaz.com](https://img.shields.io/website?url=https://manhuaaz.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhuaaz.com)](https://manhuaaz.com) | - | - | - |
 | Manhuafast | [![https://manhuafast.com](https://img.shields.io/website?url=https://manhuafast.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhuafast.com)](https://manhuafast.com) | OK | 30.03.2025 | - |
 | Manhuaga | [![https://manhuaga.com](https://img.shields.io/website?url=https://manhuaga.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhuaga.com)](https://manhuaga.com) | OK | 12.03.2025 | - |
@@ -387,6 +388,7 @@
 | ManhwaFreak | [![https://freakcomic.com](https://img.shields.io/website?url=https://freakcomic.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://freakcomic.com)](https://freakcomic.com) | - | - | - |
 | ManhwaHentai | [![https://manhwahentai.me](https://img.shields.io/website?url=https://manhwahentai.me%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhwahentai.me)](https://manhwahentai.me) | OK | 15.12.2024 | - |
 | ManhwaHentaiIo | [![https://manhwahentai.io](https://img.shields.io/website?url=https://manhwahentai.io%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhwahentai.io)](https://manhwahentai.io) | - | - | - |
+| ManhwaHub | [![https://manhwahub.to](https://img.shields.io/website?url=https://manhwahub.to%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhwahub.to)](https://manhwahub.to) | OK | 24.10.2026 | - |
 | ManhwaID | [![https://manhwaid.id](https://img.shields.io/website?url=https://manhwaid.id%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhwaid.id)](https://manhwaid.id) | OK | 19.04.2025 | - |
 | ManhwaIndo | [![https://manhwaindo.id](https://img.shields.io/website?url=https://manhwaindo.id%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhwaindo.id)](https://manhwaindo.id) | - | - | - |
 | ManhwaLand | [![https://62.182.80.253](https://img.shields.io/website?url=https://62.182.80.253%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://62.182.80.253)](https://62.182.80.253) | - | - | - |
@@ -398,7 +400,7 @@
 | ManhwasNet | [![https://manhwas.net](https://img.shields.io/website?url=https://manhwas.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhwas.net)](https://manhwas.net) | OK | 20.07.2025 | - |
 | ManhwaTo | [![https://manhwato.com](https://img.shields.io/website?url=https://manhwato.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhwato.com)](https://manhwato.com) | OK | 08.08.2026 | - |
 | ManhwaTop | [![https://manhwatop.com](https://img.shields.io/website?url=https://manhwatop.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhwatop.com)](https://manhwatop.com) | OK | 20.09.2025 | - |
-| ManhwaWeb | [![https://www.manhwaweb.com](https://img.shields.io/website?url=https://www.manhwaweb.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://www.manhwaweb.com)](https://www.manhwaweb.com) | OK | 04.09.2026 | - |
+| ManhwaWeb | [![https://www.manhwaweb.com](https://img.shields.io/website?url=https://www.manhwaweb.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://www.manhwaweb.com)](https://www.manhwaweb.com) | OK | 27.10.2026 | - |
 | ManhwaZ | [![https://manhwaz.com](https://img.shields.io/website?url=https://manhwaz.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhwaz.com)](https://manhwaz.com) | OK | 30.03.2025 | - |
 | Manta | [![https://manta.net](https://img.shields.io/website?url=https://manta.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manta.net)](https://manta.net) | OK | 26.08.2025 | Authorization value is required to see unlocked paid chapter. See [here](https://github.com/dazedcat19/FMD2/issues/1834#issuecomment-2590512862) |
 | ManwhasOnline | [![https://manwhasonline.com](https://img.shields.io/website?url=https://manwhasonline.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manwhasonline.com)](https://manwhasonline.com) | - | - | - |
@@ -417,7 +419,7 @@
 | MyReadingManga | [![https://myreadingmanga.info](https://img.shields.io/website?url=https://myreadingmanga.info%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://myreadingmanga.info)](https://myreadingmanga.info) | OK | 10.11.2025 | - |
 | MyToon | [![https://mytoon.net](https://img.shields.io/website?url=https://mytoon.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://mytoon.net)](https://mytoon.net) | - | - | - |
 | Nanase Project | [![https://lmtos.net](https://img.shields.io/website?url=https://lmtos.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://lmtos.net)](https://lmtos.net) | OK | 17.07.2026 | - |
-| Natsu | [![https://natsu.tv](https://img.shields.io/website?url=https://natsu.tv%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://natsu.tv)](https://natsu.tv) | OK | 01.07.2026 | - |
+| Natsu | [![https://natsu.one](https://img.shields.io/website?url=https://natsu.one%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://natsu.one)](https://natsu.one) | OK | 24.10.2026 | - |
 | Necro Scans | [![https://necroscans.com](https://img.shields.io/website?url=https://necroscans.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://necroscans.com)](https://necroscans.com) | OK | 09.01.2025 | Paid chapters are hidden by default |
 | NetTruyen | [![https://nettruyenviet.com](https://img.shields.io/website?url=https://nettruyenviet.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://nettruyenviet.com)](https://nettruyenviet.com) | - | - | - |
 | NetTruyenW | [![https://nettruyenww.com](https://img.shields.io/website?url=https://nettruyenww.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://nettruyenww.com)](https://nettruyenww.com) | - | - | - |
@@ -489,14 +491,14 @@
 | Ragnarok Scanlation | [![https://ragnarokscanlation.org](https://img.shields.io/website?url=https://ragnarokscanlation.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://ragnarokscanlation.org)](https://ragnarokscanlation.org) | OK | 30.03.2025 | - |
 | Raijin Scans | [![https://raijin-scans.fr](https://img.shields.io/website?url=https://raijin-scans.fr%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://raijin-scans.fr)](https://raijin-scans.fr) | OK | 08.08.2026 | Node.js is required |
 | Raiki Scan | [![https://raikiscan.com](https://img.shields.io/website?url=https://raikiscan.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://raikiscan.com)](https://raikiscan.com) | OK | 03.04.2025 | - |
-| Raven Scans | [![https://ravenscans.net](https://img.shields.io/website?url=https://ravenscans.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://ravenscans.net)](https://ravenscans.net) | OK | 27.07.2026 | - |
+| Raven Scans | [![https://ravenscans.org](https://img.shields.io/website?url=https://ravenscans.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://ravenscans.org)](https://ravenscans.org) | OK | 24.10.2026 | - |
 | RavenSeries | [![https://ravensword.lat](https://img.shields.io/website?url=https://ravensword.lat%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://ravensword.lat)](https://ravensword.lat) | - | - | - |
 | Raw Sen Manga | [![https://raw.senmanga.com](https://img.shields.io/website?url=https://raw.senmanga.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://raw.senmanga.com)](https://raw.senmanga.com) | OK | 31.08.2025 | - |
 | Raw1001 | [![https://raw1001.net](https://img.shields.io/website?url=https://raw1001.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://raw1001.net)](https://raw1001.net) | OK | 20.01.2025 | - |
 | RawDevart | [![https://rawdevart.com](https://img.shields.io/website?url=https://rawdevart.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://rawdevart.com)](https://rawdevart.com) | - | - | - |
 | RawDEX | [![https://rawdex.net](https://img.shields.io/website?url=https://rawdex.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://rawdex.net)](https://rawdex.net) | OK | 25.08.2026 | - |
 | RawINU | [![https://rawinu.com](https://img.shields.io/website?url=https://rawinu.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://rawinu.com)](https://rawinu.com) | OK | 19.01.2025 | - |
-| Rawkuma | [![https://rawkuma.net](https://img.shields.io/website?url=https://rawkuma.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://rawkuma.net)](https://rawkuma.net) | OK | 01.07.2026 | - |
+| Rawkuma | [![https://rawkuma.net](https://img.shields.io/website?url=https://rawkuma.net%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://rawkuma.net)](https://rawkuma.net) | OK | 24.10.2026 | - |
 | RawMangaUpdate | [![https://www.rawmangaupdate.com](https://img.shields.io/website?url=https://www.rawmangaupdate.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://www.rawmangaupdate.com)](https://www.rawmangaupdate.com) | - | - | - |
 | Read One Piece | [![https://ww12.readonepiece.com](https://img.shields.io/website?url=https://ww12.readonepiece.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://ww12.readonepiece.com)](https://ww12.readonepiece.com) | OK | 13.03.2026 | - |
 | ReadComicBooksOnline | [![https://readcomicbooksonline.org](https://img.shields.io/website?url=https://readcomicbooksonline.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://readcomicbooksonline.org)](https://readcomicbooksonline.org) | - | - | - |
@@ -588,7 +590,6 @@
 | Toonkor | [![https://tkor136.com](https://img.shields.io/website?url=https://tkor136.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://tkor136.com)](https://tkor136.com) | OK | 18.07.2026 | - |
 | ToonTop | [![https://toontop.io](https://img.shields.io/website?url=https://toontop.io%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://toontop.io)](https://toontop.io) | OK | 26.07.2026 | - |
 | TopComicPorno | [![https://topcomicporno.com](https://img.shields.io/website?url=https://topcomicporno.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://topcomicporno.com)](https://topcomicporno.com) | - | - | - |
-| TopManhua | [![https://manhuatop.org](https://img.shields.io/website?url=https://manhuatop.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://manhuatop.org)](https://manhuatop.org) | - | - | - |
 | TopTruyen | [![https://www.toptruyenqq.pro](https://img.shields.io/website?url=https://www.toptruyenqq.pro%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://www.toptruyenqq.pro)](https://www.toptruyenqq.pro) | - | - | - |
 | Traducciones Amistosas | [![https://traduccionesamistosas.topmanhuas.org](https://img.shields.io/website?url=https://traduccionesamistosas.topmanhuas.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://traduccionesamistosas.topmanhuas.org)](https://traduccionesamistosas.topmanhuas.org) | OK | 19.08.2025 | - |
 | TraduccionesMoonlight | [![https://traduccionesmoonlight.com](https://img.shields.io/website?url=https://traduccionesmoonlight.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://traduccionesmoonlight.com)](https://traduccionesmoonlight.com) | - | - | - |
@@ -613,7 +614,7 @@
 | VerComicsPorno | [![https://vercomicsporno.com](https://img.shields.io/website?url=https://vercomicsporno.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://vercomicsporno.com)](https://vercomicsporno.com) | - | - | - |
 | VerMangasPorno | [![https://vermangasporno.com](https://img.shields.io/website?url=https://vermangasporno.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://vermangasporno.com)](https://vermangasporno.com) | - | - | - |
 | VnSharing | [![http://truyen.vnsharing.site](https://img.shields.io/website?url=http://truyen.vnsharing.site%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=http://truyen.vnsharing.site)](http://truyen.vnsharing.site) | - | - | - |
-| VoraToon | [![https://v1.voratoon.com](https://img.shields.io/website?url=https://v1.voratoon.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://v1.voratoon.com)](https://v1.voratoon.com) | OK | 16.08.2026 | - |
+| VoraToon | [![https://voratoon.co](https://img.shields.io/website?url=https://voratoon.co%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://voratoon.co)](https://voratoon.co) | OK | 26.10.2026 | - |
 | Vortex Scans Free | [![https://vortexscansfree.com](https://img.shields.io/website?url=https://vortexscansfree.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://vortexscansfree.com)](https://vortexscansfree.com) | OK | 14.01.2025 | - |
 | Vortex Scans | [![https://vortexscans.org](https://img.shields.io/website?url=https://vortexscans.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://vortexscans.org)](https://vortexscans.org) | OK | 10.10.2026 | Paid chapters are hidden by default |
 | VyManga | [![https://mangavyvy.com](https://img.shields.io/website?url=https://mangavyvy.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://mangavyvy.com)](https://mangavyvy.com) | OK | 09.10.2026 | - |
@@ -627,7 +628,7 @@
 | WeebDex | [![https://weebdex.org](https://img.shields.io/website?url=https://weebdex.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://weebdex.org)](https://weebdex.org) | OK | 25.03.2026 | - |
 | WeiboManhua | [![http://manhua.weibo.com](https://img.shields.io/website?url=http://manhua.weibo.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=http://manhua.weibo.com)](http://manhua.weibo.com) | - | - | - |
 | WeLoMa | [![https://weloma.art](https://img.shields.io/website?url=https://weloma.art%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://weloma.art)](https://weloma.art) | OK | 03.01.2026 | - |
-| WestManga | [![https://westmanga.co](https://img.shields.io/website?url=https://westmanga.co%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://westmanga.co)](https://westmanga.co) | OK | 10.06.2026 | - |
+| WestManga | [![https://v1.westmanga.my](https://img.shields.io/website?url=https://v1.westmanga.my%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://v1.westmanga.my)](https://v1.westmanga.my) | OK | 25.10.2026 | - |
 | WhimSubs | [![https://whimsubs.xyz](https://img.shields.io/website?url=https://whimsubs.xyz%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://whimsubs.xyz)](https://whimsubs.xyz) | - | - | - |
 | WhiteCloudPavilion | [![https://www.whitecloudpavilion.com](https://img.shields.io/website?url=https://www.whitecloudpavilion.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://www.whitecloudpavilion.com)](https://www.whitecloudpavilion.com) | - | - | - |
 | Wicked Scans | [![https://wickedscans.org](https://img.shields.io/website?url=https://wickedscans.org%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://wickedscans.org)](https://wickedscans.org) | OK | 09.01.2025 | - |
@@ -661,6 +662,7 @@
 | 古风漫画网 | [![https://www.gufengmh.com](https://img.shields.io/website?url=https://www.gufengmh.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://www.gufengmh.com)](https://www.gufengmh.com) | OK | 06.01.2025 | - |
 | 嬉皮漫畫 (HipMH) | [![https://m.hipmh.com](https://img.shields.io/website?url=https://m.hipmh.com%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://m.hipmh.com)](https://m.hipmh.com) | OK | 03.10.2026 | - |
 | 漫画RAW (mangajp) | [![https://mangajp.top](https://img.shields.io/website?url=https://mangajp.top%2F&up_message=%E2%9C%93&down_message=%E2%9A%A0&label=https://mangajp.top)](https://mangajp.top) | OK | 03.04.2025 | - |
+| ~18Kami~ | ~https://18kami.com~ | Removed | 11.01.2026 | Redirected to 18Comic |
 | ~365Manga~ | ~https://365manga.com~ | Removed | 03.08.2025 | - |
 | ~AGR Comics~ | ~https://agrcomics.org~ | Removed | 11.06.2026 | - |
 | ~AHStudios~ | ~https://ahstudios.net~ | Removed | 03.08.2025 | - |
@@ -773,6 +775,7 @@
 | ~Mangas20~ | ~https://mangas20.com~ | Removed | 03.08.2025 | - |
 | ~MangaSaga~ | ~https://mangasaga.com~ | Removed | 05.06.2025 | Redirected to MangaK |
 | ~MangaSee~ | ~https://mangasee123.com~ | Removed | 07.02.2025 | Moved to Weeb Central |
+| ~MangaShow~ | ~https://mangashow.me~ | Removed | 01.11.2026 | - |
 | ~MangaSpin~ | ~https://mangaspin.com~ | Removed | 05.06.2025 | Redirected to MangaK |
 | ~MangasRaw~ | ~https://mangas-raw.com~ | Removed | 20.07.2025 | - |
 | ~MangaStreamCC~ | ~https://www.mangastream.cc~ | Removed | 03.08.2025 | - |
