@@ -3,14 +3,14 @@
 # Build pb.so (lua-protobuf) for the Linux build of FMD2 and put it next to
 # the binary in bin/x86_64-linux/. MangaPlus needs it ("require 'pb'"); the
 # Windows release ships the same library as pb.dll (see dist/readme.md for
-# the pinned commit). FMD adds its own directory to Lua's package.cpath, so
+# the version; keep COMMIT in step with it). 0.5.3 is the tag's commit. FMD adds its own directory to Lua's package.cpath, so
 # the module is found there whatever the working directory.
 #
 # Needs: curl, gcc, liblua5.4-dev.
 #
 set -euo pipefail
 
-COMMIT=75e3b51b8e8dda0343c9b4956e0c33b6eef44aa6
+COMMIT=ee4beb3865e2b82ea94b8a4314d78875c550ce20
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEST="$REPO/bin/x86_64-linux"
 WORK="$(mktemp -d)"
